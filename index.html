@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SW Colorado Stream Gauges</title>
-<meta name="description" content="Live streamflow and gage height from USGS gauges on the Animas River and the San Juan River below it.">
+<meta name="description" content="Live streamflow and gage height from USGS gauges in the Animas, Upper San Juan, La Plata, Mancos and Dolores watersheds of southwest Colorado.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet">
@@ -25,6 +25,7 @@
   --water: #1F6F8B;     /* main stem */
   --iron: #B5652B;      /* tributaries */
   --spruce: #2F5D50;    /* links, focus */
+  --sanjuan: #2F5D50;   /* San Juan below Navajo Lake */
   --bad: #A23B2A;
   --font: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
@@ -42,6 +43,7 @@
     --water: #5FB3CF;
     --iron: #D9894F;
     --spruce: #8CC4B3;
+    --sanjuan: #8CC4B3;
     --bad: #E07A66;
   }
 }
@@ -190,6 +192,34 @@ td .swatch.trib { background: var(--iron); }
 /* ---------- Footer ---------- */
 footer { margin-top: 36px; color: var(--muted); font-size: 0.85rem; max-width: 75ch; }
 footer p { margin: 0 0 6px; }
+
+/* ---------- Watershed tabs ---------- */
+.tabs { border-bottom: 2px solid var(--line); margin-bottom: 26px; overflow-x: auto; }
+.tabs-row { display: flex; gap: 4px; min-width: max-content; }
+.tab {
+  text-align: left; background: transparent; border: 0; border-bottom: 3px solid transparent;
+  margin-bottom: -2px; padding: 10px 18px 12px; border-radius: var(--r-sm) var(--r-sm) 0 0; color: var(--ink);
+}
+.tab:hover { background: var(--panel); border-color: transparent; border-bottom-color: var(--line); }
+.tab[aria-pressed="true"] { background: var(--panel); border-bottom-color: var(--water); }
+.tab-name { display: block; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; line-height: 1.2; }
+.tab-sub { display: block; font-size: 0.82rem; color: var(--muted); line-height: 1.3; }
+.ws-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 24px; margin-bottom: 22px; }
+.ws-head h2 { font-size: 1.8rem; margin: 0; }
+.ws-head p { margin: 2px 0 0; color: var(--muted); }
+.ws-count { color: var(--muted); font-size: 0.95rem; }
+
+/* ---------- Shared San Juan group ---------- */
+.gauge.sj { border-left-color: var(--sanjuan); }
+.group-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 12px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.group-head h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; color: var(--sanjuan); }
+.group-head span { color: var(--muted); font-size: 0.9rem; }
+.river .legend { flex-wrap: wrap; gap: 6px 16px; }
+.river .legend .sj::before { background: var(--sanjuan); }
+.river .group-label { font-size: 14px; font-weight: 600; fill: var(--sanjuan); }
+.river .group-note { font-size: 13px; fill: var(--muted); }
+td .swatch.sj { background: var(--sanjuan); }
+tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; font-size: 0.9rem; background: var(--bg); padding-top: 14px; }
 </style>
 </head>
 <body>
@@ -198,7 +228,7 @@ footer p { margin: 0 0 6px; }
   <header class="site-head">
     <div>
       <h1>SW Colorado Stream Gauges</h1>
-      <p class="lede">Live readings from USGS gauges on the Animas River, from the headwaters at Silverton down to the San Juan at Four Corners.</p>
+      <p class="lede">Live readings from USGS gauges across five watersheds of southwest Colorado.</p>
     </div>
     <div class="status" id="status" data-state="loading" aria-live="polite">
       <span class="dot" aria-hidden="true"></span>
@@ -206,6 +236,18 @@ footer p { margin: 0 0 6px; }
       <button type="button" id="refresh">Refresh now</button>
     </div>
   </header>
+
+  <nav class="tabs" aria-label="Watersheds">
+    <div class="tabs-row" id="tabs"></div>
+  </nav>
+
+  <section class="ws-head" aria-labelledby="ws-title">
+    <div>
+      <h2 id="ws-title">—</h2>
+      <p id="ws-blurb"></p>
+    </div>
+    <span class="ws-count" id="ws-count"></span>
+  </section>
 
   <div class="banner" id="banner" role="alert" hidden>
     <span id="banner-text">Couldn’t reach USGS. The page will try again automatically.</span>
@@ -217,7 +259,9 @@ footer p { margin: 0 0 6px; }
       <h2 id="river-title">The river, top to bottom</h2>
       <p class="note">Line width follows the latest discharge. Select a gauge to jump to its chart.</p>
       <div id="spine"></div>
-      <div class="legend"><span class="main">Main stem</span><span class="trib">Tributary</span></div>
+      <div class="legend">
+        <span class="main">Main stem</span><span class="trib">Tributary</span><span class="sj" id="legend-sj">San Juan below Navajo Lake</span>
+      </div>
     </aside>
 
     <section aria-labelledby="trends-title">
@@ -240,7 +284,7 @@ footer p { margin: 0 0 6px; }
   </div>
 
   <section class="table-section" aria-labelledby="table-title">
-    <h2 id="table-title">All gauges</h2>
+    <h2 id="table-title">All gauges in this watershed</h2>
     <p class="note">Latest reading at each gauge. The 24-hour change compares the latest discharge with the reading closest to 24 hours earlier.</p>
     <div class="table-wrap">
       <table>
@@ -268,23 +312,91 @@ footer p { margin: 0 0 6px; }
 <script>
 /* =========================================================
    CONFIGURATION
-   Add, remove, or reorder gauges here. List them from
-   upstream to downstream; the page draws them in this order.
+   Each watershed lists its gauges from upstream to downstream.
    role: "main" for the main stem, "trib" for a tributary.
+   shared: true adds the San Juan gauges below Navajo Lake
+   after the watershed's own gauges, with joinNote above them.
+   The id becomes the tab's web address, e.g. #dolores.
    ========================================================= */
-const GAUGES = [
-  { site: "09358000", name: "Animas River at Silverton, CO",                         short: "Animas at Silverton",      role: "main" },
-  { site: "09358550", name: "Cement Creek at Silverton, CO",                         short: "Cement Creek",             role: "trib" },
-  { site: "09359010", name: "Mineral Creek at Silverton, CO",                        short: "Mineral Creek",            role: "trib" },
-  { site: "09359020", name: "Animas River below Silverton, CO",                      short: "Animas below Silverton",   role: "main" },
-  { site: "09359500", name: "Animas River at Tall Timbers Resort above Tacoma, CO",  short: "Animas above Tacoma",      role: "main" },
-  { site: "09361000", name: "Hermosa Creek near Hermosa, CO",                        short: "Hermosa Creek",            role: "trib" },
-  { site: "09361500", name: "Animas River at Durango, CO",                           short: "Animas at Durango",        role: "main" },
-  { site: "09362520", name: "Animas River at Pump Plant",                            short: "Animas at Pump Plant",     role: "main" },
-  { site: "09363500", name: "Animas River near Cedar Hill, NM",                      short: "Animas near Cedar Hill",   role: "main" },
-  { site: "09364500", name: "Animas River at Farmington, NM",                        short: "Animas at Farmington",     role: "main" },
-  { site: "09371010", name: "San Juan River at Four Corners, CO",                    short: "San Juan at Four Corners", role: "main" },
+const WATERSHEDS = [
+  {
+    id: "animas", name: "Animas", sub: "Silverton to Farmington", title: "Animas River",
+    blurb: "From the headwaters above Silverton through Durango to the San Juan River at Farmington.",
+    shared: true, joinNote: "The Animas joins the San Juan at Farmington.",
+    gauges: [
+      { site: "09358000", name: "Animas River at Silverton, CO",                        short: "Animas at Silverton",    role: "main" },
+      { site: "09358550", name: "Cement Creek at Silverton, CO",                        short: "Cement Creek",           role: "trib" },
+      { site: "09359010", name: "Mineral Creek at Silverton, CO",                       short: "Mineral Creek",          role: "trib" },
+      { site: "09359020", name: "Animas River below Silverton, CO",                     short: "Animas below Silverton", role: "main" },
+      { site: "09359500", name: "Animas River at Tall Timbers Resort above Tacoma, CO", short: "Animas above Tacoma",    role: "main" },
+      { site: "09361000", name: "Hermosa Creek near Hermosa, CO",                       short: "Hermosa Creek",          role: "trib" },
+      { site: "09361500", name: "Animas River at Durango, CO",                          short: "Animas at Durango",      role: "main" },
+      { site: "09362520", name: "Animas River at Pump Plant",                           short: "Animas at Pump Plant",   role: "main" },
+      { site: "09363500", name: "Animas River near Cedar Hill, NM",                     short: "Animas near Cedar Hill", role: "main" },
+      { site: "09364500", name: "Animas River at Farmington, NM",                       short: "Animas at Farmington",   role: "main" },
+    ],
+  },
+  {
+    id: "upper-san-juan", name: "Upper San Juan", sub: "Above Navajo Lake", title: "Upper San Juan River",
+    blurb: "The San Juan from Pagosa Springs down to Navajo Lake, with the West Fork, Rio Blanco and Navajo River.",
+    shared: true, joinNote: "The San Juan continues below Navajo Dam.",
+    gauges: [
+      { site: "09341500", name: "West Fork San Juan River near Pagosa Springs, CO",  short: "West Fork San Juan",          role: "trib" },
+      { site: "09342500", name: "San Juan River at Pagosa Springs, CO",              short: "San Juan at Pagosa Springs",  role: "main" },
+      { site: "09343000", name: "Rio Blanco near Pagosa Springs, CO",                short: "Rio Blanco",                  role: "trib" },
+      { site: "09344000", name: "Navajo River at Banded Peak Ranch near Chromo, CO", short: "Navajo River at Banded Peak", role: "trib" },
+      { site: "09346000", name: "Navajo River at Edith, CO",                         short: "Navajo River at Edith",       role: "trib" },
+      { site: "09346400", name: "San Juan River near Carracas, CO",                  short: "San Juan near Carracas",      role: "main" },
+    ],
+  },
+  {
+    id: "la-plata", name: "La Plata", sub: "Hesperus to the state line", title: "La Plata River",
+    blurb: "From Hesperus down to the Colorado–New Mexico state line.",
+    shared: true, joinNote: "The La Plata joins the San Juan near Farmington.",
+    gauges: [
+      { site: "09365500", name: "La Plata River at Hesperus, CO",                    short: "La Plata at Hesperus",   role: "main" },
+      { site: "09366500", name: "La Plata River at Colorado–New Mexico state line",  short: "La Plata at state line", role: "main" },
+    ],
+  },
+  {
+    id: "mancos", name: "Mancos", sub: "Mancos to Towaoc", title: "Mancos River",
+    blurb: "From above the town of Mancos down past Towaoc toward Four Corners.",
+    shared: true, joinNote: "The Mancos joins the San Juan near Four Corners.",
+    gauges: [
+      { site: "09370000", name: "Mancos River near Mancos, CO", short: "Mancos near Mancos", role: "main" },
+      { site: "09371000", name: "Mancos River near Towaoc, CO", short: "Mancos near Towaoc", role: "main" },
+    ],
+  },
+  {
+    id: "dolores", name: "Dolores", sub: "Rico to Cisco", title: "Dolores River",
+    blurb: "From below Rico through McPhee Reservoir to Cisco, Utah, with the West Dolores and San Miguel.",
+    shared: false,
+    gauges: [
+      { site: "09165000", name: "Dolores River below Rico, CO",               short: "Dolores below Rico",           role: "main" },
+      { site: "09166000", name: "West Dolores River near Stoner, CO",          short: "West Dolores",                 role: "trib" },
+      { site: "09166500", name: "Dolores River at Dolores, CO",                short: "Dolores at Dolores",           role: "main" },
+      { site: "09168730", name: "Dolores River near Slick Rock, CO",           short: "Dolores near Slick Rock",      role: "main" },
+      { site: "09169500", name: "Dolores River at Bedrock, CO",                short: "Dolores at Bedrock",           role: "main" },
+      { site: "09171310", name: "South Fork San Miguel River near Ophir, CO",  short: "S Fork San Miguel near Ophir", role: "trib" },
+      { site: "09172500", name: "San Miguel River near Placerville, CO",       short: "San Miguel near Placerville",  role: "trib" },
+      { site: "09177000", name: "San Miguel River at Uravan, CO",              short: "San Miguel at Uravan",         role: "trib" },
+      { site: "09180000", name: "Dolores River near Cisco, UT",                short: "Dolores near Cisco",           role: "main" },
+    ],
+  },
 ];
+
+// San Juan gauges below Navajo Lake, shown on every watershed with shared: true.
+const SHARED = {
+  title: "San Juan River below Navajo Lake",
+  gauges: [
+    { site: "09355500", name: "San Juan River near Archuleta, NM",   short: "San Juan near Archuleta",   role: "sj" },
+    { site: "09365000", name: "San Juan River at Farmington, NM",    short: "San Juan at Farmington",    role: "sj" },
+    { site: "09368000", name: "San Juan River at Shiprock, NM",      short: "San Juan at Shiprock",      role: "sj" },
+    { site: "09371010", name: "San Juan River at Four Corners, CO",  short: "San Juan at Four Corners",  role: "sj" },
+    { site: "09379500", name: "San Juan River near Bluff, UT",       short: "San Juan near Bluff",       role: "sj" },
+    { site: "09380000", name: "San Juan River near Mexican Hat, UT", short: "San Juan near Mexican Hat", role: "sj" },
+  ],
+};
 
 const CONFIG = {
   refreshMinutes: 15,
@@ -299,20 +411,18 @@ const PARAM = { discharge: "00060", gage: "00065" };
    DATA: two sources, tried in order.
    1. USGS Water Services "instantaneous values" (one request for all gauges)
    2. USGS Water Data OGC API, the newer service (one request per gauge and measure)
-   Both return the same shape here:
-   Map(site -> { discharge: [{t: Date, v: Number}], gage: [...] })
+   Both return Map(site -> { discharge: [{t, v}], gage: [...] })
    ========================================================= */
-
-async function fetchWaterServices(hours) {
+async function fetchWaterServices(sites, hours) {
   const days = Math.ceil(hours / 24);
   const url = "https://waterservices.usgs.gov/nwis/iv/?format=json"
-    + "&sites=" + GAUGES.map(g => g.site).join(",")
+    + "&sites=" + sites.join(",")
     + "&parameterCd=" + PARAM.discharge + "," + PARAM.gage
     + "&period=P" + days + "D&siteStatus=all";
   const res = await fetch(url);
   if (!res.ok) throw new Error("Water Services returned " + res.status);
   const json = await res.json();
-  const out = emptyResult();
+  const out = emptyResult(sites);
   for (const ts of (json.value && json.value.timeSeries) || []) {
     const site = ts.sourceInfo.siteCode[0].value;
     const code = ts.variable.variableCode[0].value;
@@ -329,18 +439,18 @@ async function fetchWaterServices(hours) {
   return out;
 }
 
-async function fetchOgc(hours) {
-  const out = emptyResult();
+async function fetchOgc(sites, hours) {
+  const out = emptyResult(sites);
   const start = new Date(Date.now() - hours * 3600e3).toISOString();
   const jobs = [];
-  for (const g of GAUGES) {
+  for (const site of sites) {
     for (const [key, code] of Object.entries(PARAM)) {
       let url = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/continuous/items?f=json&limit=10000"
-        + "&monitoring_location_id=USGS-" + g.site
+        + "&monitoring_location_id=USGS-" + site
         + "&parameter_code=" + code
         + "&time=" + encodeURIComponent(start + "/..");
       if (CONFIG.apiKey) url += "&api_key=" + encodeURIComponent(CONFIG.apiKey);
-      jobs.push(fetchOgcPages(url).then(pts => { out.get(g.site)[key] = pts; }));
+      jobs.push(fetchOgcPages(url).then(pts => { out.get(site)[key] = pts; }));
     }
   }
   const results = await Promise.allSettled(jobs);
@@ -360,44 +470,55 @@ async function fetchOgcPages(url, pages = 0) {
   return pts.sort((a, b) => a.t - b.t);
 }
 
-function emptyResult() {
-  return new Map(GAUGES.map(g => [g.site, { discharge: [], gage: [] }]));
+function emptyResult(sites) {
+  return new Map(sites.map(s => [s, { discharge: [], gage: [] }]));
 }
 
 /* =========================================================
    STATE
    ========================================================= */
-const state = { measure: "discharge", hours: 168, data: null, fetchedHours: 0, source: null, updated: null, loading: false };
-const cache = new Map(); // hours -> { data, at, source }
+const state = { ws: WATERSHEDS[0].id, measure: "discharge", hours: 168, data: null, fetchedHours: 0, updated: null, loading: false };
+const cache = new Map(); // "watershed|hours" -> { data, at }
+let loadToken = 0;
+
+const currentWs = () => WATERSHEDS.find(w => w.id === state.ws) || WATERSHEDS[0];
+const ownGauges = () => currentWs().gauges;
+const sharedGauges = () => (currentWs().shared ? SHARED.gauges : []);
+const allGauges = () => [...ownGauges(), ...sharedGauges()];
 
 async function load(hours, { force = false } = {}) {
-  const cached = cache.get(hours);
+  const ws = state.ws;
+  const key = ws + "|" + hours;
+  const cached = cache.get(key);
   if (!force && cached && Date.now() - cached.at < CONFIG.refreshMinutes * 60e3) {
-    Object.assign(state, { data: cached.data, fetchedHours: hours, source: cached.source, updated: new Date(cached.at) });
+    Object.assign(state, { data: cached.data, fetchedHours: hours, updated: new Date(cached.at) });
+    setStatus("live", "Updated " + fClock(state.updated));
     render();
     return;
   }
+  const token = ++loadToken;
   state.loading = true;
   setStatus("loading", "Loading readings from USGS");
-  if (!state.data) render();
-  let data = null, source = null;
-  try {
-    data = await fetchWaterServices(hours); source = "USGS Water Services";
-  } catch (e1) {
+  render();
+  const sites = allGauges().map(g => g.site);
+  let data = null;
+  try { data = await fetchWaterServices(sites, hours); }
+  catch (e1) {
     console.warn(e1);
-    try { data = await fetchOgc(hours); source = "USGS Water Data API"; }
+    try { data = await fetchOgc(sites, hours); }
     catch (e2) { console.warn(e2); }
   }
+  if (token !== loadToken) return; // the reader switched tabs while this was loading
   state.loading = false;
   if (!data) {
     document.getElementById("banner").hidden = false;
-    setStatus("error", state.updated ? "Showing readings from " + fClock(state.updated) : "No readings yet");
-    if (!state.data) render();
+    setStatus("error", state.updated && state.data ? "Showing readings from " + fClock(state.updated) : "No readings yet");
+    render();
     return;
   }
   document.getElementById("banner").hidden = true;
-  cache.set(hours, { data, at: Date.now(), source });
-  Object.assign(state, { data, fetchedHours: hours, source, updated: new Date() });
+  cache.set(key, { data, at: Date.now() });
+  Object.assign(state, { data, fetchedHours: hours, updated: new Date() });
   setStatus("live", "Updated " + fClock(state.updated));
   render();
 }
@@ -416,6 +537,8 @@ const fFtAxis = d3.format(".1f");
 const fClock = d3.timeFormat("%-I:%M %p");
 const fFull = d3.timeFormat("%b %-d, %-I:%M %p");
 const fSigned = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fCfs(Math.abs(v));
+const colorFor = role => role === "trib" ? "var(--iron)" : role === "sj" ? "var(--sanjuan)" : "var(--water)";
+const classFor = role => role === "trib" ? "trib" : role === "sj" ? "sj" : "";
 
 function latestFor(site) {
   const d = state.data && state.data.get(site);
@@ -437,34 +560,75 @@ function latestFor(site) {
    RENDER
    ========================================================= */
 function render() {
+  drawTabs();
+  drawHeader();
   drawSpine();
   drawGrid();
   drawTable();
 }
 
+function drawTabs() {
+  const row = document.getElementById("tabs");
+  row.replaceChildren();
+  for (const w of WATERSHEDS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "tab";
+    b.setAttribute("aria-pressed", String(w.id === state.ws));
+    const n = document.createElement("span"); n.className = "tab-name"; n.textContent = w.name;
+    const s = document.createElement("span"); s.className = "tab-sub"; s.textContent = w.sub;
+    b.append(n, s);
+    b.addEventListener("click", () => selectWatershed(w.id, { push: true }));
+    row.append(b);
+  }
+}
+
+function drawHeader() {
+  const w = currentWs();
+  document.getElementById("ws-title").textContent = w.title;
+  document.getElementById("ws-blurb").textContent = w.blurb;
+  const n = w.gauges.length;
+  document.getElementById("ws-count").textContent = n + (n === 1 ? " gauge" : " gauges")
+    + (w.shared ? ", plus " + SHARED.gauges.length + " on the San Juan below Navajo Lake" : "");
+  document.getElementById("legend-sj").hidden = !w.shared;
+  document.title = w.name + " | SW Colorado Stream Gauges";
+}
+
 function drawSpine() {
   const host = document.getElementById("spine");
   host.replaceChildren();
-  const rowH = 56, top = 14;
-  const H = top + (GAUGES.length - 1) * rowH + 22;
+  const w = currentWs();
+  const rowH = 56, headH = 58, top = 14;
+  const own = ownGauges(), shared = sharedGauges();
+  const mainX = 26, tribX = 26 + 44, lx = 90;
+
+  // Lay out rows: own gauges, then (optionally) a group heading, then shared gauges.
+  let y = top;
+  const pos = [];
+  own.forEach(g => { pos.push({ g, y, group: "own", l: latestFor(g.site), x: g.role === "trib" ? tribX : mainX }); y += rowH; });
+  let headY = null;
+  if (shared.length) {
+    headY = y - rowH + headH;
+    y = headY + headH - 10;
+    shared.forEach(g => { pos.push({ g, y, group: "shared", l: latestFor(g.site), x: mainX }); y += rowH; });
+  }
+  const H = y - rowH + 30;
   const W = Math.max(240, host.clientWidth || 300);
-  const mainX = 26, tribX = 26 + 44;
   const svg = d3.select(host).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("height", H)
     .attr("role", "img").attr("aria-label", "Schematic of gauges from upstream to downstream");
 
-  const pos = GAUGES.map((g, i) => ({ g, y: top + i * rowH, x: g.role === "trib" ? tribX : mainX, l: latestFor(g.site) }));
   const flows = pos.map(p => p.l.q).filter(v => v != null);
-  const maxQ = d3.max(flows) || 1;
-  const width = d3.scaleSqrt([0, maxQ], [2, 16]);
+  const width = d3.scaleSqrt([0, d3.max(flows) || 1], [2, 16]);
 
-  // Main stem: one segment between each pair of consecutive main-stem gauges, sized by the upstream gauge's flow.
-  const main = pos.filter(p => p.g.role === "main");
-  for (let i = 0; i < main.length - 1; i++) {
-    const a = main[i], b = main[i + 1];
-    svg.append("line").attr("x1", mainX).attr("x2", mainX).attr("y1", a.y).attr("y2", b.y)
-      .attr("stroke", "var(--water)").attr("stroke-linecap", "round")
-      .attr("stroke-width", a.l.q != null ? width(a.l.q) : 2)
-      .attr("opacity", a.l.q != null ? 0.55 : 0.2);
+  // Stem segments between consecutive main-stem gauges within each group.
+  for (const group of ["own", "shared"]) {
+    const stem = pos.filter(p => p.group === group && p.g.role !== "trib");
+    for (let i = 0; i < stem.length - 1; i++) {
+      const a = stem[i], b = stem[i + 1];
+      svg.append("line").attr("x1", mainX).attr("x2", mainX).attr("y1", a.y).attr("y2", b.y)
+        .attr("stroke", group === "shared" ? "var(--sanjuan)" : "var(--water)").attr("stroke-linecap", "round")
+        .attr("stroke-width", a.l.q != null ? width(a.l.q) : 2)
+        .attr("opacity", a.l.q != null ? 0.55 : 0.2);
+    }
   }
   // Tributaries: an elbow joining the main stem just below the gauge.
   for (const p of pos.filter(p => p.g.role === "trib")) {
@@ -474,20 +638,30 @@ function drawSpine() {
       .attr("stroke-width", p.l.q != null ? width(p.l.q) : 2)
       .attr("opacity", p.l.q != null ? 0.6 : 0.2);
   }
+  // Group heading for the shared San Juan gauges
+  if (headY != null) {
+    svg.append("line").attr("x1", 0).attr("x2", W).attr("y1", headY - 22).attr("y2", headY - 22)
+      .attr("stroke", "var(--line)").attr("stroke-dasharray", "4 4");
+    svg.append("text").attr("class", "group-label").attr("x", 0).attr("y", headY).text(SHARED.title);
+    svg.append("text").attr("class", "group-note").attr("x", 0).attr("y", headY + 18).text(w.joinNote || "");
+  }
   // Nodes and labels
   for (const p of pos) {
-    const color = p.g.role === "trib" ? "var(--iron)" : "var(--water)";
+    const color = colorFor(p.g.role);
     const node = svg.append("g").attr("class", "node").attr("tabindex", 0).attr("role", "button")
       .attr("aria-label", `${p.g.short}: ${p.l.q != null ? fCfs(p.l.q) + " cfs" : "no recent reading"}. Jump to chart.`)
       .on("click", () => jumpTo(p.g.site))
       .on("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); jumpTo(p.g.site); } });
     node.append("circle").attr("class", "halo").attr("cx", p.x).attr("cy", p.y).attr("r", 10).attr("fill", "var(--panel)").attr("stroke", "none");
     node.append("circle").attr("cx", p.x).attr("cy", p.y).attr("r", 6).attr("fill", color).attr("stroke", "var(--panel)").attr("stroke-width", 2);
-    const lx = (p.g.role === "trib" ? tribX : mainX) + 20 + (p.g.role === "main" ? 44 : 0);
     node.append("text").attr("class", "label-name").attr("x", lx).attr("y", p.y - 1).text(p.g.short);
     node.append("text").attr("class", "label-val").attr("x", lx).attr("y", p.y + 16)
-      .text(p.l.q != null ? fCfs(p.l.q) + " cfs" : (state.loading && !state.data ? "Loading" : "No recent reading"));
+      .text(p.l.q != null ? fCfs(p.l.q) + " cfs" : (state.loading && !hasData() ? "Loading" : "No recent reading"));
   }
+}
+
+function hasData() {
+  return !!state.data && allGauges().some(g => state.data.has(g.site));
 }
 
 function jumpTo(site) {
@@ -500,16 +674,18 @@ function jumpTo(site) {
 function drawGrid() {
   const grid = document.getElementById("grid");
   grid.replaceChildren();
+  const w = currentWs();
   const isQ = state.measure === "discharge";
   const key = isQ ? "discharge" : "gage";
   const unit = isQ ? "cfs" : "ft";
   const fVal = isQ ? fCfs : fFt;
   const fAxis = isQ ? fCfs : fFtAxis;
   const fX = state.hours <= 24 ? d3.timeFormat("%-I %p") : state.hours <= 72 ? d3.timeFormat("%a %-I %p") : d3.timeFormat("%b %-d");
+  const ready = hasData() && !(state.loading && !cache.has(state.ws + "|" + state.fetchedHours));
 
-  for (const g of GAUGES) {
+  const addCard = (g) => {
     const card = document.createElement("article");
-    card.className = "gauge" + (g.role === "trib" ? " trib" : "");
+    card.className = ("gauge " + classFor(g.role)).trim();
     card.id = "g-" + g.site;
     const l = latestFor(g.site);
     const latest = isQ ? l.q : l.h;
@@ -527,18 +703,25 @@ function drawGrid() {
     card.append(head);
     grid.append(card);
 
-    if (!state.data) {
-      const sk = document.createElement("div"); sk.className = "gauge-chart skeleton"; card.append(sk); continue;
-    }
+    if (!ready) { const sk = document.createElement("div"); sk.className = "gauge-chart skeleton"; card.append(sk); return; }
     const cutoff = Date.now() - state.hours * 3600e3;
-    const series = (state.data.get(g.site)[key] || []).filter(p => +p.t >= cutoff);
+    const series = ((state.data.get(g.site) || {})[key] || []).filter(p => +p.t >= cutoff);
     if (series.length < 2) {
       const e = document.createElement("div"); e.className = "gauge-empty";
       e.textContent = isQ ? "No discharge readings in this time range." : "This gauge has no gage height readings in this time range.";
-      card.append(e); continue;
+      card.append(e); return;
     }
     const box = document.createElement("div"); box.className = "gauge-chart"; card.append(box);
-    drawChart(box, series, g.role === "trib" ? "var(--iron)" : "var(--water)", { fVal, fAxis, fX, unit, id: g.site });
+    drawChart(box, series, colorFor(g.role), { fVal, fAxis, fX, unit, id: g.site });
+  };
+
+  ownGauges().forEach(addCard);
+  if (w.shared) {
+    const h = document.createElement("div"); h.className = "group-head";
+    const t = document.createElement("h3"); t.textContent = SHARED.title;
+    const s = document.createElement("span"); s.textContent = (w.joinNote ? w.joinNote + " " : "") + "These gauges appear on every San Juan Basin tab.";
+    h.append(t, s); grid.append(h);
+    SHARED.gauges.forEach(addCard);
   }
 }
 
@@ -606,23 +789,43 @@ function drawChart(box, series, color, { fVal, fAxis, fX, unit, id }) {
 function drawTable() {
   const tb = document.getElementById("tbody");
   tb.replaceChildren();
-  for (const g of GAUGES) {
+  const ready = hasData();
+  const addRow = (g) => {
     const l = latestFor(g.site);
     const tr = tb.insertRow();
     const name = tr.insertCell();
-    const sw = document.createElement("span"); sw.className = "swatch" + (g.role === "trib" ? " trib" : "");
+    const sw = document.createElement("span"); sw.className = ("swatch " + classFor(g.role)).trim();
     name.append(sw, document.createTextNode(g.name));
     const site = tr.insertCell();
     const a = document.createElement("a"); a.href = `https://waterdata.usgs.gov/monitoring-location/USGS-${g.site}/`;
     a.rel = "noopener"; a.target = "_blank"; a.textContent = g.site; site.append(a);
     const cell = (text, cls) => { const td = tr.insertCell(); td.textContent = text; td.className = cls || ""; };
-    const blank = state.data ? "No data" : "…";
-    cell(l.q != null ? fCfs(l.q) : blank, "num");
-    cell(l.change != null ? fSigned(l.change) : (state.data ? "—" : "…"), "num");
-    cell(l.h != null ? fFt(l.h) : (state.data ? "—" : "…"), "num hide-narrow");
-    cell(l.at ? fFull(l.at) : (state.data ? "—" : "…"), "hide-narrow");
+    cell(l.q != null ? fCfs(l.q) : (ready ? "No data" : "…"), "num");
+    cell(l.change != null ? fSigned(l.change) : (ready ? "—" : "…"), "num");
+    cell(l.h != null ? fFt(l.h) : (ready ? "—" : "…"), "num hide-narrow");
+    cell(l.at ? fFull(l.at) : (ready ? "—" : "…"), "hide-narrow");
+  };
+  ownGauges().forEach(addRow);
+  if (currentWs().shared) {
+    const tr = tb.insertRow(); tr.className = "group-row";
+    const th = document.createElement("th"); th.scope = "rowgroup"; th.colSpan = 6; th.textContent = SHARED.title;
+    tr.append(th);
+    SHARED.gauges.forEach(addRow);
   }
 }
+
+/* =========================================================
+   WATERSHED SELECTION + WEB ADDRESSES (#animas, #dolores, ...)
+   ========================================================= */
+function selectWatershed(id, { push = false } = {}) {
+  if (!WATERSHEDS.some(w => w.id === id)) id = WATERSHEDS[0].id;
+  const changed = id !== state.ws;
+  state.ws = id;
+  if (push && location.hash.slice(1) !== id) history.pushState(null, "", "#" + id);
+  if (changed || !state.data) { state.data = null; state.fetchedHours = 0; }
+  load(Math.max(state.hours, 168));
+}
+window.addEventListener("hashchange", () => selectWatershed(location.hash.slice(1)));
 
 /* =========================================================
    CONTROLS + REFRESH
@@ -646,9 +849,11 @@ document.getElementById("refresh-mins").textContent = CONFIG.refreshMinutes;
 
 setInterval(() => { if (!document.hidden) load(Math.max(state.hours, 168), { force: true }); }, CONFIG.refreshMinutes * 60e3);
 let resizeTimer;
-window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (state.data || !state.loading) render(); }, 150); });
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
 
 syncButtons();
+const startId = location.hash.slice(1);
+state.ws = WATERSHEDS.some(w => w.id === startId) ? startId : WATERSHEDS[0].id;
 render();
 load(168); // a week covers the 24h, 72h and week views in one request
 </script>
