@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SW Colorado Stream Gauges</title>
+<meta name="description" content="Live streamflow and gage height from USGS gauges in the Animas, Upper San Juan, La Plata, Mancos and Dolores watersheds of southwest Colorado.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+/* =========================================================
+   SW Colorado Stream Gauges
+   Palette drawn from the watershed: granite, spruce,
+   Animas water, and the iron-stained tributaries above Silverton.
+   ========================================================= */
+:root {
+  color-scheme: light;
+  --bg: #EDF1EF;        /* granite mist */
+  --panel: #F8FAF9;
+  --ink: #1B2A2F;
+  --muted: #5C6B6F;
+  --line: #D3DBD8;
+  --water: #1F6F8B;     /* main stem */
+  --iron: #B5652B;      /* tributaries */
+  --spruce: #2F5D50;    /* links, focus */
+  --sanjuan: #2F5D50;   /* San Juan below Navajo Lake */
+  --bad: #A23B2A;
+  --font: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  --r-sm: 4px;
+  --r-md: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #12201F;
+    --panel: #182A2A;
+    --ink: #E4ECEA;
+    --muted: #93A5A3;
+    --line: #2A3E3D;
+    --water: #5FB3CF;
+    --iron: #D9894F;
+    --spruce: #8CC4B3;
+    --sanjuan: #8CC4B3;
+    --bad: #E07A66;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--spruce); }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--spruce); outline-offset: 2px; border-radius: var(--r-sm); }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 32px 24px 48px; }
+
+/* ---------- Header ---------- */
+.site-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px 32px; margin-bottom: 28px; }
+.site-head h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+.site-head .lede { margin: 0; color: var(--muted); max-width: 60ch; font-size: 1.05rem; }
+.status { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--muted); }
+.status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.status[data-state="live"] .dot { background: var(--water); }
+.status[data-state="error"] .dot { background: var(--bad); }
+.status[data-state="loading"] .dot { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .status[data-state="loading"] .dot { animation: none; } }
+
+button {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--muted); }
+
+.banner {
+  border: 1px solid var(--bad);
+  color: var(--ink);
+  background: var(--panel);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+}
+.banner[hidden] { display: none; }
+
+/* ---------- Layout ---------- */
+.layout { display: grid; grid-template-columns: 1fr; gap: 28px; }
+@media (min-width: 940px) {
+  .layout { grid-template-columns: minmax(280px, 330px) 1fr; align-items: start; }
+  .river { position: sticky; top: 20px; }
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0 0 4px;
+}
+.note { color: var(--muted); font-size: 0.9rem; margin: 0 0 16px; max-width: 70ch; }
+
+/* ---------- River spine (the signature element) ---------- */
+.river { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); padding: 20px 16px 12px 20px; }
+.river svg { display: block; width: 100%; overflow: visible; }
+.river .node { cursor: pointer; }
+.river .node:focus-visible { outline: none; }
+.river .node:focus-visible circle.halo { stroke: var(--spruce); stroke-width: 2; }
+.river .label-name { font-size: 15px; font-weight: 500; fill: var(--ink); }
+.river .label-val { font-size: 13px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.river .legend { display: flex; gap: 16px; font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+.river .legend span::before { content: ""; display: inline-block; width: 14px; height: 4px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.river .legend .main::before { background: var(--water); }
+.river .legend .trib::before { background: var(--iron); }
+
+/* ---------- Controls ---------- */
+.controls { display: flex; flex-wrap: wrap; gap: 10px 20px; margin: 0 0 16px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; background: var(--panel); }
+.seg button { border: 0; border-left: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--muted); padding: 6px 14px; font-size: 0.92rem; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 500; }
+
+/* ---------- Gauge charts ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.gauge {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--water);
+  border-radius: var(--r-sm);
+  padding: 12px 14px 8px;
+  position: relative;
+  min-width: 0;
+  scroll-margin-top: 20px;
+}
+.gauge.trib { border-left-color: var(--iron); }
+.gauge.flash { animation: flash 1.2s ease-out; }
+@keyframes flash { 0% { box-shadow: 0 0 0 3px var(--spruce); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .gauge.flash { animation: none; outline: 2px solid var(--spruce); } }
+.gauge-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.gauge-name { font-weight: 600; font-size: 1rem; line-height: 1.25; }
+.gauge-site { font-size: 0.8rem; color: var(--muted); }
+.gauge-site a { color: inherit; }
+.gauge-val { font-family: var(--font-display); font-weight: 600; font-size: 1.6rem; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gauge-val small { font-family: var(--font); font-weight: 400; font-size: 0.8rem; color: var(--muted); margin-left: 3px; }
+.gauge-chart { height: 120px; margin-top: 8px; position: relative; }
+.gauge-empty { height: 120px; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--muted); font-size: 0.88rem; padding: 0 12px; }
+.tick { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.gridline { stroke: var(--line); stroke-width: 1; }
+.tip {
+  position: absolute; pointer-events: none; z-index: 3;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-sm);
+  box-shadow: 0 4px 14px rgba(0,0,0,.12);
+  padding: 4px 8px; font-size: 0.8rem; white-space: nowrap;
+}
+.tip .t { color: var(--muted); }
+.skeleton { background: linear-gradient(90deg, var(--line), transparent, var(--line)); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: var(--r-sm); opacity: .5; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+/* ---------- Table ---------- */
+.table-section { margin-top: 36px; }
+.table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+th, td { padding: 10px 14px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { font-weight: 500; font-size: 0.85rem; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; }
+td .swatch { display: inline-block; width: 4px; height: 14px; border-radius: 2px; margin-right: 8px; vertical-align: -2px; background: var(--water); }
+td .swatch.trib { background: var(--iron); }
+@media (max-width: 640px) { .hide-narrow { display: none; } }
+
+/* ---------- Footer ---------- */
+footer { margin-top: 36px; color: var(--muted); font-size: 0.85rem; max-width: 75ch; }
+footer p { margin: 0 0 6px; }
+
+/* ---------- Watershed tabs ---------- */
+.tabs { border-bottom: 2px solid var(--line); margin-bottom: 26px; overflow-x: auto; }
+.tabs-row { display: flex; gap: 4px; min-width: max-content; }
+.tab {
+  text-align: left; background: transparent; border: 0; border-bottom: 3px solid transparent;
+  margin-bottom: -2px; padding: 10px 18px 12px; border-radius: var(--r-sm) var(--r-sm) 0 0; color: var(--ink);
+}
+.tab:hover { background: var(--panel); border-color: transparent; border-bottom-color: var(--line); }
+.tab[aria-pressed="true"] { background: var(--panel); border-bottom-color: var(--water); }
+.tab-name { display: block; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; line-height: 1.2; }
+.tab-sub { display: block; font-size: 0.82rem; color: var(--muted); line-height: 1.3; }
+.ws-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 24px; margin-bottom: 22px; }
+.ws-head h2 { font-size: 1.8rem; margin: 0; }
+.ws-head p { margin: 2px 0 0; color: var(--muted); }
+.ws-count { color: var(--muted); font-size: 0.95rem; }
+
+/* ---------- Shared San Juan group ---------- */
+.gauge.sj { border-left-color: var(--sanjuan); }
+.group-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 12px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.group-head h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; color: var(--sanjuan); }
+.group-head span { color: var(--muted); font-size: 0.9rem; }
+.river .legend { flex-wrap: wrap; gap: 6px 16px; }
+.river .legend .sj::before { background: var(--sanjuan); }
+.river .group-label { font-size: 14px; font-weight: 600; fill: var(--sanjuan); }
+.river .group-note { font-size: 13px; fill: var(--muted); }
+td .swatch.sj { background: var(--sanjuan); }
+tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; font-size: 0.9rem; background: var(--bg); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site-head">
+    <div>
+      <h1>SW Colorado Stream Gauges</h1>
+      <p class="lede">Live readings from USGS gauges across five watersheds of southwest Colorado.</p>
+    </div>
+    <div class="status" id="status" data-state="loading" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="status-text">Loading readings from USGS</span>
+      <button type="button" id="refresh">Refresh now</button>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Watersheds">
+    <div class="tabs-row" id="tabs"></div>
+  </nav>
+
+  <section class="ws-head" aria-labelledby="ws-title">
+    <div>
+      <h2 id="ws-title">—</h2>
+      <p id="ws-blurb"></p>
+    </div>
+    <span class="ws-count" id="ws-count"></span>
+  </section>
+
+  <div class="banner" id="banner" role="alert" hidden>
+    <span id="banner-text">Couldn’t reach USGS. The page will try again automatically.</span>
+    <button type="button" id="retry">Try again</button>
+  </div>
+
+  <div class="layout">
+    <aside class="river" aria-labelledby="river-title">
+      <h2 id="river-title">The river, top to bottom</h2>
+      <p class="note">Line width follows the latest discharge. Select a gauge to jump to its chart.</p>
+      <div id="spine"></div>
+      <div class="legend">
+        <span class="main">Main stem</span><span class="trib">Tributary</span><span class="sj" id="legend-sj">San Juan below Navajo Lake</span>
+      </div>
+    </aside>
+
+    <section aria-labelledby="trends-title">
+      <h2 id="trends-title">Recent trends</h2>
+      <p class="note">Each gauge has its own scale, since tributaries run far smaller than the main stem. Times are shown in your local time zone.</p>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Measure">
+          <button type="button" data-measure="discharge" aria-pressed="true">Discharge (cfs)</button>
+          <button type="button" data-measure="gage" aria-pressed="false">Gage height (ft)</button>
+        </div>
+        <div class="seg" role="group" aria-label="Time range">
+          <button type="button" data-hours="24" aria-pressed="false">24 hours</button>
+          <button type="button" data-hours="72" aria-pressed="false">72 hours</button>
+          <button type="button" data-hours="168" aria-pressed="true">Week</button>
+          <button type="button" data-hours="720" aria-pressed="false">30 days</button>
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+  </div>
+
+  <section class="table-section" aria-labelledby="table-title">
+    <h2 id="table-title">All gauges in this watershed</h2>
+    <p class="note">Latest reading at each gauge. The 24-hour change compares the latest discharge with the reading closest to 24 hours earlier.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Gauge</th>
+            <th scope="col">USGS site</th>
+            <th scope="col" class="num">Discharge (cfs)</th>
+            <th scope="col" class="num">24h change</th>
+            <th scope="col" class="num hide-narrow">Gage height (ft)</th>
+            <th scope="col" class="hide-narrow">Last reading</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p>Data from the <a href="https://waterdata.usgs.gov/" rel="noopener">U.S. Geological Survey</a>. Recent readings are provisional and may be revised by USGS.</p>
+    <p>Readings refresh automatically every <span id="refresh-mins">15</span> minutes while this page is open.</p>
+  </footer>
+</div>
+
+<script>
+/* =========================================================
+   CONFIGURATION
+   Each watershed lists its gauges from upstream to downstream.
+   role: "main" for the main stem, "trib" for a tributary.
+   shared: true adds the San Juan gauges below Navajo Lake
+   after the watershed's own gauges, with joinNote above them.
+   The id becomes the tab's web address, e.g. #dolores.
+   ========================================================= */
+const WATERSHEDS = [
+  {
+    id: "animas", name: "Animas", sub: "Silverton to Farmington", title: "Animas River",
+    blurb: "From the headwaters above Silverton through Durango to the San Juan River at Farmington.",
+    shared: true, joinNote: "The Animas joins the San Juan at Farmington.",
+    gauges: [
+      { site: "09358000", name: "Animas River at Silverton, CO",                        short: "Animas at Silverton",    role: "main" },
+      { site: "09358550", name: "Cement Creek at Silverton, CO",                        short: "Cement Creek",           role: "trib" },
+      { site: "09359010", name: "Mineral Creek at Silverton, CO",                       short: "Mineral Creek",          role: "trib" },
+      { site: "09359020", name: "Animas River below Silverton, CO",                     short: "Animas below Silverton", role: "main" },
+      { site: "09359500", name: "Animas River at Tall Timbers Resort above Tacoma, CO", short: "Animas above Tacoma",    role: "main" },
+      { site: "09361000", name: "Hermosa Creek near Hermosa, CO",                       short: "Hermosa Creek",          role: "trib" },
+      { site: "09361500", name: "Animas River at Durango, CO",                          short: "Animas at Durango",      role: "main" },
+      { site: "09362520", name: "Animas River at Pump Plant",                           short: "Animas at Pump Plant",   role: "main" },
+      { site: "09363500", name: "Animas River near Cedar Hill, NM",                     short: "Animas near Cedar Hill", role: "main" },
+      { site: "09364500", name: "Animas River at Farmington, NM",                       short: "Animas at Farmington",   role: "main" },
+    ],
+  },
+  {
+    id: "upper-san-juan", name: "Upper San Juan", sub: "Above Navajo Lake", title: "Upper San Juan River",
+    blurb: "The San Juan from Pagosa Springs down to Navajo Lake, with the West Fork, Rio Blanco and Navajo River.",
+    shared: true, joinNote: "The San Juan continues below Navajo Dam.",
+    gauges: [
+      { site: "09341500", name: "West Fork San Juan River near Pagosa Springs, CO",  short: "West Fork San Juan",          role: "trib" },
+      { site: "09342500", name: "San Juan River at Pagosa Springs, CO",              short: "San Juan at Pagosa Springs",  role: "main" },
+      { site: "09343000", name: "Rio Blanco near Pagosa Springs, CO",                short: "Rio Blanco",                  role: "trib" },
+      { site: "09344000", name: "Navajo River at Banded Peak Ranch near Chromo, CO", short: "Navajo River at Banded Peak", role: "trib" },
+      { site: "09346000", name: "Navajo River at Edith, CO",                         short: "Navajo River at Edith",       role: "trib" },
+      { site: "09346400", name: "San Juan River near Carracas, CO",                  short: "San Juan near Carracas",      role: "main" },
+    ],
+  },
+  {
+    id: "la-plata", name: "La Plata", sub: "Hesperus to the state line", title: "La Plata River",
+    blurb: "From Hesperus down to the Colorado–New Mexico state line.",
+    shared: true, joinNote: "The La Plata joins the San Juan near Farmington.",
+    gauges: [
+      { site: "09365500", name: "La Plata River at Hesperus, CO",                    short: "La Plata at Hesperus",   role: "main" },
+      { site: "09366500", name: "La Plata River at Colorado–New Mexico state line",  short: "La Plata at state line", role: "main" },
+    ],
+  },
+  {
+    id: "mancos", name: "Mancos", sub: "Mancos to Towaoc", title: "Mancos River",
+    blurb: "From above the town of Mancos down past Towaoc toward Four Corners.",
+    shared: true, joinNote: "The Mancos joins the San Juan near Four Corners.",
+    gauges: [
+      { site: "09370000", name: "Mancos River near Mancos, CO", short: "Mancos near Mancos", role: "main" },
+      { site: "09371000", name: "Mancos River near Towaoc, CO", short: "Mancos near Towaoc", role: "main" },
+    ],
+  },
+  {
+    id: "dolores", name: "Dolores", sub: "Rico to Cisco", title: "Dolores River",
+    blurb: "From below Rico through McPhee Reservoir to Cisco, Utah, with the West Dolores and San Miguel.",
+    shared: false,
+    gauges: [
+      { site: "09165000", name: "Dolores River below Rico, CO",               short: "Dolores below Rico",           role: "main" },
+      { site: "09166000", name: "West Dolores River near Stoner, CO",          short: "West Dolores",                 role: "trib" },
+      { site: "09166500", name: "Dolores River at Dolores, CO",                short: "Dolores at Dolores",           role: "main" },
+      { site: "09168730", name: "Dolores River near Slick Rock, CO",           short: "Dolores near Slick Rock",      role: "main" },
+      { site: "09169500", name: "Dolores River at Bedrock, CO",                short: "Dolores at Bedrock",           role: "main" },
+      { site: "09171310", name: "South Fork San Miguel River near Ophir, CO",  short: "S Fork San Miguel near Ophir", role: "trib" },
+      { site: "09172500", name: "San Miguel River near Placerville, CO",       short: "San Miguel near Placerville",  role: "trib" },
+      { site: "09177000", name: "San Miguel River at Uravan, CO",              short: "San Miguel at Uravan",         role: "trib" },
+      { site: "09180000", name: "Dolores River near Cisco, UT",                short: "Dolores near Cisco",           role: "main" },
+    ],
+  },
+];
+
+// San Juan gauges below Navajo Lake, shown on every watershed with shared: true.
+const SHARED = {
+  title: "San Juan River below Navajo Lake",
+  gauges: [
+    { site: "09355500", name: "San Juan River near Archuleta, NM",   short: "San Juan near Archuleta",   role: "sj" },
+    { site: "09365000", name: "San Juan River at Farmington, NM",    short: "San Juan at Farmington",    role: "sj" },
+    { site: "09368000", name: "San Juan River at Shiprock, NM",      short: "San Juan at Shiprock",      role: "sj" },
+    { site: "09371010", name: "San Juan River at Four Corners, CO",  short: "San Juan at Four Corners",  role: "sj" },
+    { site: "09379500", name: "San Juan River near Bluff, UT",       short: "San Juan near Bluff",       role: "sj" },
+    { site: "09380000", name: "San Juan River near Mexican Hat, UT", short: "San Juan near Mexican Hat", role: "sj" },
+  ],
+};
+
+const CONFIG = {
+  refreshMinutes: 15,
+  // Optional key for the newer USGS Water Data API (raises its rate limits).
+  // Get one free at https://api.waterdata.usgs.gov/signup/ and paste it here.
+  apiKey: "",
+};
+
+const PARAM = { discharge: "00060", gage: "00065" };
+
+/* =========================================================
+   DATA: two sources, tried in order.
+   1. USGS Water Services "instantaneous values" (one request for all gauges)
+   2. USGS Water Data OGC API, the newer service (one request per gauge and measure)
+   Both return Map(site -> { discharge: [{t, v}], gage: [...] })
+   ========================================================= */
+async function fetchWaterServices(sites, hours) {
+  const days = Math.ceil(hours / 24);
+  const url = "https://waterservices.usgs.gov/nwis/iv/?format=json"
+    + "&sites=" + sites.join(",")
+    + "&parameterCd=" + PARAM.discharge + "," + PARAM.gage
+    + "&period=P" + days + "D&siteStatus=all";
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Water Services returned " + res.status);
+  const json = await res.json();
+  const out = emptyResult(sites);
+  for (const ts of (json.value && json.value.timeSeries) || []) {
+    const site = ts.sourceInfo.siteCode[0].value;
+    const code = ts.variable.variableCode[0].value;
+    const key = code === PARAM.discharge ? "discharge" : code === PARAM.gage ? "gage" : null;
+    if (!key || !out.has(site)) continue;
+    const noData = Number(ts.variable.noDataValue);
+    // Some gauges report more than one method; keep the longest series.
+    const best = (ts.values || []).reduce((a, b) => ((b.value || []).length > (a.value || []).length ? b : a), { value: [] });
+    const pts = best.value
+      .map(p => ({ t: new Date(p.dateTime), v: Number(p.value) }))
+      .filter(p => Number.isFinite(p.v) && p.v !== noData && !isNaN(p.t));
+    if (pts.length > out.get(site)[key].length) out.get(site)[key] = pts;
+  }
+  return out;
+}
+
+async function fetchOgc(sites, hours) {
+  const out = emptyResult(sites);
+  const start = new Date(Date.now() - hours * 3600e3).toISOString();
+  const jobs = [];
+  for (const site of sites) {
+    for (const [key, code] of Object.entries(PARAM)) {
+      let url = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/continuous/items?f=json&limit=10000"
+        + "&monitoring_location_id=USGS-" + site
+        + "&parameter_code=" + code
+        + "&time=" + encodeURIComponent(start + "/..");
+      if (CONFIG.apiKey) url += "&api_key=" + encodeURIComponent(CONFIG.apiKey);
+      jobs.push(fetchOgcPages(url).then(pts => { out.get(site)[key] = pts; }));
+    }
+  }
+  const results = await Promise.allSettled(jobs);
+  if (results.every(r => r.status === "rejected")) throw new Error("Water Data API unavailable");
+  return out;
+}
+
+async function fetchOgcPages(url, pages = 0) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Water Data API returned " + res.status);
+  const json = await res.json();
+  const pts = (json.features || [])
+    .map(f => ({ t: new Date(f.properties.time), v: Number(f.properties.value) }))
+    .filter(p => Number.isFinite(p.v) && !isNaN(p.t));
+  const next = (json.links || []).find(l => l.rel === "next");
+  if (next && pages < 5) pts.push(...await fetchOgcPages(next.href, pages + 1));
+  return pts.sort((a, b) => a.t - b.t);
+}
+
+function emptyResult(sites) {
+  return new Map(sites.map(s => [s, { discharge: [], gage: [] }]));
+}
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const state = { ws: WATERSHEDS[0].id, measure: "discharge", hours: 168, data: null, fetchedHours: 0, updated: null, loading: false };
+const cache = new Map(); // "watershed|hours" -> { data, at }
+let loadToken = 0;
+
+const currentWs = () => WATERSHEDS.find(w => w.id === state.ws) || WATERSHEDS[0];
+const ownGauges = () => currentWs().gauges;
+const sharedGauges = () => (currentWs().shared ? SHARED.gauges : []);
+const allGauges = () => [...ownGauges(), ...sharedGauges()];
+
+async function load(hours, { force = false } = {}) {
+  const ws = state.ws;
+  const key = ws + "|" + hours;
+  const cached = cache.get(key);
+  if (!force && cached && Date.now() - cached.at < CONFIG.refreshMinutes * 60e3) {
+    Object.assign(state, { data: cached.data, fetchedHours: hours, updated: new Date(cached.at) });
+    setStatus("live", "Updated " + fClock(state.updated));
+    render();
+    return;
+  }
+  const token = ++loadToken;
+  state.loading = true;
+  setStatus("loading", "Loading readings from USGS");
+  render();
+  const sites = allGauges().map(g => g.site);
+  let data = null;
+  try { data = await fetchWaterServices(sites, hours); }
+  catch (e1) {
+    console.warn(e1);
+    try { data = await fetchOgc(sites, hours); }
+    catch (e2) { console.warn(e2); }
+  }
+  if (token !== loadToken) return; // the reader switched tabs while this was loading
+  state.loading = false;
+  if (!data) {
+    document.getElementById("banner").hidden = false;
+    setStatus("error", state.updated && state.data ? "Showing readings from " + fClock(state.updated) : "No readings yet");
+    render();
+    return;
+  }
+  document.getElementById("banner").hidden = true;
+  cache.set(key, { data, at: Date.now() });
+  Object.assign(state, { data, fetchedHours: hours, updated: new Date() });
+  setStatus("live", "Updated " + fClock(state.updated));
+  render();
+}
+
+function setStatus(s, text) {
+  document.getElementById("status").dataset.state = s;
+  document.getElementById("status-text").textContent = text;
+}
+
+/* =========================================================
+   FORMATTING + DERIVED VALUES
+   ========================================================= */
+const fCfs = d3.format(",.0f");
+const fFt = d3.format(".2f");
+const fFtAxis = d3.format(".1f");
+const fClock = d3.timeFormat("%-I:%M %p");
+const fFull = d3.timeFormat("%b %-d, %-I:%M %p");
+const fSigned = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fCfs(Math.abs(v));
+const colorFor = role => role === "trib" ? "var(--iron)" : role === "sj" ? "var(--sanjuan)" : "var(--water)";
+const classFor = role => role === "trib" ? "trib" : role === "sj" ? "sj" : "";
+
+function latestFor(site) {
+  const d = state.data && state.data.get(site);
+  if (!d) return {};
+  const q = d.discharge, h = d.gage;
+  const lastQ = q[q.length - 1], lastH = h[h.length - 1];
+  let change = null;
+  if (lastQ) {
+    const target = +lastQ.t - 24 * 3600e3;
+    const i = d3.bisector(p => p.t).center(q, target);
+    const prior = q[i];
+    if (prior && Math.abs(+prior.t - target) < 3 * 3600e3) change = lastQ.v - prior.v;
+  }
+  const last = [lastQ, lastH].filter(Boolean).map(p => p.t);
+  return { q: lastQ ? lastQ.v : null, h: lastH ? lastH.v : null, change, at: last.length ? new Date(Math.max(...last)) : null };
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+function render() {
+  drawTabs();
+  drawHeader();
+  drawSpine();
+  drawGrid();
+  drawTable();
+}
+
+function drawTabs() {
+  const row = document.getElementById("tabs");
+  row.replaceChildren();
+  for (const w of WATERSHEDS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "tab";
+    b.setAttribute("aria-pressed", String(w.id === state.ws));
+    const n = document.createElement("span"); n.className = "tab-name"; n.textContent = w.name;
+    const s = document.createElement("span"); s.className = "tab-sub"; s.textContent = w.sub;
+    b.append(n, s);
+    b.addEventListener("click", () => selectWatershed(w.id, { push: true }));
+    row.append(b);
+  }
+}
+
+function drawHeader() {
+  const w = currentWs();
+  document.getElementById("ws-title").textContent = w.title;
+  document.getElementById("ws-blurb").textContent = w.blurb;
+  const n = w.gauges.length;
+  document.getElementById("ws-count").textContent = n + (n === 1 ? " gauge" : " gauges")
+    + (w.shared ? ", plus " + SHARED.gauges.length + " on the San Juan below Navajo Lake" : "");
+  document.getElementById("legend-sj").hidden = !w.shared;
+  document.title = w.name + " | SW Colorado Stream Gauges";
+}
+
+function drawSpine() {
+  const host = document.getElementById("spine");
+  host.replaceChildren();
+  const w = currentWs();
+  const rowH = 56, headH = 58, top = 14;
+  const own = ownGauges(), shared = sharedGauges();
+  const mainX = 26, tribX = 26 + 44, lx = 90;
+
+  // Lay out rows: own gauges, then (optionally) a group heading, then shared gauges.
+  let y = top;
+  const pos = [];
+  own.forEach(g => { pos.push({ g, y, group: "own", l: latestFor(g.site), x: g.role === "trib" ? tribX : mainX }); y += rowH; });
+  let headY = null;
+  if (shared.length) {
+    headY = y - rowH + headH;
+    y = headY + headH - 10;
+    shared.forEach(g => { pos.push({ g, y, group: "shared", l: latestFor(g.site), x: mainX }); y += rowH; });
+  }
+  const H = y - rowH + 30;
+  const W = Math.max(240, host.clientWidth || 300);
+  const svg = d3.select(host).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("height", H)
+    .attr("role", "img").attr("aria-label", "Schematic of gauges from upstream to downstream");
+
+  const flows = pos.map(p => p.l.q).filter(v => v != null);
+  const width = d3.scaleSqrt([0, d3.max(flows) || 1], [2, 16]);
+
+  // Stem segments between consecutive main-stem gauges within each group.
+  for (const group of ["own", "shared"]) {
+    const stem = pos.filter(p => p.group === group && p.g.role !== "trib");
+    for (let i = 0; i < stem.length - 1; i++) {
+      const a = stem[i], b = stem[i + 1];
+      svg.append("line").attr("x1", mainX).attr("x2", mainX).attr("y1", a.y).attr("y2", b.y)
+        .attr("stroke", group === "shared" ? "var(--sanjuan)" : "var(--water)").attr("stroke-linecap", "round")
+        .attr("stroke-width", a.l.q != null ? width(a.l.q) : 2)
+        .attr("opacity", a.l.q != null ? 0.55 : 0.2);
+    }
+  }
+  // Tributaries: an elbow joining the main stem just below the gauge.
+  for (const p of pos.filter(p => p.g.role === "trib")) {
+    const joinY = p.y + rowH * 0.55;
+    svg.append("path").attr("d", `M${p.x},${p.y} V${joinY} H${mainX}`)
+      .attr("fill", "none").attr("stroke", "var(--iron)").attr("stroke-linejoin", "round").attr("stroke-linecap", "round")
+      .attr("stroke-width", p.l.q != null ? width(p.l.q) : 2)
+      .attr("opacity", p.l.q != null ? 0.6 : 0.2);
+  }
+  // Group heading for the shared San Juan gauges
+  if (headY != null) {
+    svg.append("line").attr("x1", 0).attr("x2", W).attr("y1", headY - 22).attr("y2", headY - 22)
+      .attr("stroke", "var(--line)").attr("stroke-dasharray", "4 4");
+    svg.append("text").attr("class", "group-label").attr("x", 0).attr("y", headY).text(SHARED.title);
+    svg.append("text").attr("class", "group-note").attr("x", 0).attr("y", headY + 18).text(w.joinNote || "");
+  }
+  // Nodes and labels
+  for (const p of pos) {
+    const color = colorFor(p.g.role);
+    const node = svg.append("g").attr("class", "node").attr("tabindex", 0).attr("role", "button")
+      .attr("aria-label", `${p.g.short}: ${p.l.q != null ? fCfs(p.l.q) + " cfs" : "no recent reading"}. Jump to chart.`)
+      .on("click", () => jumpTo(p.g.site))
+      .on("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); jumpTo(p.g.site); } });
+    node.append("circle").attr("class", "halo").attr("cx", p.x).attr("cy", p.y).attr("r", 10).attr("fill", "var(--panel)").attr("stroke", "none");
+    node.append("circle").attr("cx", p.x).attr("cy", p.y).attr("r", 6).attr("fill", color).attr("stroke", "var(--panel)").attr("stroke-width", 2);
+    node.append("text").attr("class", "label-name").attr("x", lx).attr("y", p.y - 1).text(p.g.short);
+    node.append("text").attr("class", "label-val").attr("x", lx).attr("y", p.y + 16)
+      .text(p.l.q != null ? fCfs(p.l.q) + " cfs" : (state.loading && !hasData() ? "Loading" : "No recent reading"));
+  }
+}
+
+function hasData() {
+  return !!state.data && allGauges().some(g => state.data.has(g.site));
+}
+
+function jumpTo(site) {
+  const el = document.getElementById("g-" + site);
+  if (!el) return;
+  el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+}
+
+function drawGrid() {
+  const grid = document.getElementById("grid");
+  grid.replaceChildren();
+  const w = currentWs();
+  const isQ = state.measure === "discharge";
+  const key = isQ ? "discharge" : "gage";
+  const unit = isQ ? "cfs" : "ft";
+  const fVal = isQ ? fCfs : fFt;
+  const fAxis = isQ ? fCfs : fFtAxis;
+  const fX = state.hours <= 24 ? d3.timeFormat("%-I %p") : state.hours <= 72 ? d3.timeFormat("%a %-I %p") : d3.timeFormat("%b %-d");
+  const ready = hasData() && !(state.loading && !cache.has(state.ws + "|" + state.fetchedHours));
+
+  const addCard = (g) => {
+    const card = document.createElement("article");
+    card.className = ("gauge " + classFor(g.role)).trim();
+    card.id = "g-" + g.site;
+    const l = latestFor(g.site);
+    const latest = isQ ? l.q : l.h;
+
+    const head = document.createElement("div"); head.className = "gauge-head";
+    const left = document.createElement("div");
+    const nm = document.createElement("div"); nm.className = "gauge-name"; nm.textContent = g.short;
+    const site = document.createElement("div"); site.className = "gauge-site";
+    const a = document.createElement("a"); a.href = `https://waterdata.usgs.gov/monitoring-location/USGS-${g.site}/`;
+    a.rel = "noopener"; a.target = "_blank"; a.textContent = "USGS " + g.site;
+    site.append(a); left.append(nm, site);
+    const val = document.createElement("div"); val.className = "gauge-val";
+    if (latest != null) { val.textContent = fVal(latest); const s = document.createElement("small"); s.textContent = unit; val.append(s); }
+    head.append(left, val);
+    card.append(head);
+    grid.append(card);
+
+    if (!ready) { const sk = document.createElement("div"); sk.className = "gauge-chart skeleton"; card.append(sk); return; }
+    const cutoff = Date.now() - state.hours * 3600e3;
+    const series = ((state.data.get(g.site) || {})[key] || []).filter(p => +p.t >= cutoff);
+    if (series.length < 2) {
+      const e = document.createElement("div"); e.className = "gauge-empty";
+      e.textContent = isQ ? "No discharge readings in this time range." : "This gauge has no gage height readings in this time range.";
+      card.append(e); return;
+    }
+    const box = document.createElement("div"); box.className = "gauge-chart"; card.append(box);
+    drawChart(box, series, colorFor(g.role), { fVal, fAxis, fX, unit, id: g.site });
+  };
+
+  ownGauges().forEach(addCard);
+  if (w.shared) {
+    const h = document.createElement("div"); h.className = "group-head";
+    const t = document.createElement("h3"); t.textContent = SHARED.title;
+    const s = document.createElement("span"); s.textContent = (w.joinNote ? w.joinNote + " " : "") + "These gauges appear on every San Juan Basin tab.";
+    h.append(t, s); grid.append(h);
+    SHARED.gauges.forEach(addCard);
+  }
+}
+
+function drawChart(box, series, color, { fVal, fAxis, fX, unit, id }) {
+  const W = Math.max(200, box.clientWidth), H = 120;
+  const svg = d3.select(box).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%").attr("height", H).style("display", "block");
+  const ext = d3.extent(series, p => p.v);
+  const pad = Math.max((ext[1] - ext[0]) * 0.15, Math.abs(ext[1]) * 0.02, 0.05);
+  const yDom = d3.scaleLinear([ext[0] - pad, ext[1] + pad], [0, 1]).nice().domain();
+  const ticks = d3.scaleLinear(yDom, [0, 1]).ticks(3);
+
+  const probe = svg.append("text").attr("class", "tick");
+  const wMax = d3.max(ticks, v => { probe.text(fAxis(v)); return probe.node().getComputedTextLength(); }) || 20;
+  probe.remove();
+  const m = { l: Math.ceil(wMax) + 8, r: 8, t: 6, b: 20 };
+  const x = d3.scaleTime([series[0].t, series[series.length - 1].t], [m.l, W - m.r]);
+  const y = d3.scaleLinear(yDom, [H - m.b, m.t]);
+
+  svg.append("g").selectAll("line").data(ticks).join("line").attr("class", "gridline")
+    .attr("x1", m.l).attr("x2", W - m.r).attr("y1", v => y(v)).attr("y2", v => y(v));
+  svg.append("g").selectAll("text").data(ticks).join("text").attr("class", "tick")
+    .attr("x", m.l - 6).attr("y", v => y(v)).attr("dy", "0.32em").attr("text-anchor", "end").text(fAxis);
+
+  // x ticks: keep labels inside the chart and apart from each other
+  const xt = x.ticks(W < 280 ? 2 : 3);
+  const xg = svg.append("g");
+  let lastRight = -Infinity;
+  for (const d of xt) {
+    const t = xg.append("text").attr("class", "tick").attr("y", H - 4).attr("text-anchor", "middle").text(fX(d));
+    const w = t.node().getComputedTextLength();
+    const cx = Math.min(W - m.r - w / 2, Math.max(m.l + w / 2, x(d)));
+    if (cx - w / 2 < lastRight + 8) { t.remove(); continue; }
+    t.attr("x", cx); lastRight = cx + w / 2;
+  }
+
+  const gid = "grad-" + id;
+  const grad = svg.append("defs").append("linearGradient").attr("id", gid).attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 1);
+  [[0, .24], [.5, .08], [1, 0]].forEach(([o, a]) => grad.append("stop").attr("offset", o).attr("stop-color", color).attr("stop-opacity", a));
+  svg.append("path").datum(series).attr("fill", `url(#${gid})`)
+    .attr("d", d3.area().x(p => x(p.t)).y0(H - m.b).y1(p => y(p.v)));
+  svg.append("path").datum(series).attr("fill", "none").attr("stroke", color).attr("stroke-width", 2)
+    .attr("stroke-linejoin", "round").attr("stroke-linecap", "round")
+    .attr("d", d3.line().x(p => x(p.t)).y(p => y(p.v)));
+
+  const dot = svg.append("circle").attr("r", 4).attr("fill", color).attr("stroke", "var(--panel)").attr("stroke-width", 2).style("display", "none");
+  const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; box.append(tip);
+  const bis = d3.bisector(p => p.t).center;
+  svg.append("rect").attr("x", m.l).attr("y", m.t).attr("width", W - m.l - m.r).attr("height", H - m.t - m.b).attr("fill", "transparent")
+    .on("pointermove", ev => {
+      const [px] = d3.pointer(ev);
+      const p = series[bis(series, x.invert(px))];
+      if (!p) return;
+      dot.attr("cx", x(p.t)).attr("cy", y(p.v)).style("display", null);
+      tip.replaceChildren();
+      const t = document.createElement("div"); t.className = "t"; t.textContent = fFull(p.t);
+      const v = document.createElement("div"); v.textContent = fVal(p.v) + " " + unit;
+      tip.append(t, v); tip.hidden = false;
+      const [bx, by] = d3.pointer(ev, box);
+      tip.style.left = Math.max(0, Math.min(box.clientWidth - tip.offsetWidth, bx + 12)) + "px";
+      tip.style.top = Math.max(-8, by - tip.offsetHeight - 10) + "px";
+    })
+    .on("pointerleave", () => { dot.style("display", "none"); tip.hidden = true; });
+}
+
+function drawTable() {
+  const tb = document.getElementById("tbody");
+  tb.replaceChildren();
+  const ready = hasData();
+  const addRow = (g) => {
+    const l = latestFor(g.site);
+    const tr = tb.insertRow();
+    const name = tr.insertCell();
+    const sw = document.createElement("span"); sw.className = ("swatch " + classFor(g.role)).trim();
+    name.append(sw, document.createTextNode(g.name));
+    const site = tr.insertCell();
+    const a = document.createElement("a"); a.href = `https://waterdata.usgs.gov/monitoring-location/USGS-${g.site}/`;
+    a.rel = "noopener"; a.target = "_blank"; a.textContent = g.site; site.append(a);
+    const cell = (text, cls) => { const td = tr.insertCell(); td.textContent = text; td.className = cls || ""; };
+    cell(l.q != null ? fCfs(l.q) : (ready ? "No data" : "…"), "num");
+    cell(l.change != null ? fSigned(l.change) : (ready ? "—" : "…"), "num");
+    cell(l.h != null ? fFt(l.h) : (ready ? "—" : "…"), "num hide-narrow");
+    cell(l.at ? fFull(l.at) : (ready ? "—" : "…"), "hide-narrow");
+  };
+  ownGauges().forEach(addRow);
+  if (currentWs().shared) {
+    const tr = tb.insertRow(); tr.className = "group-row";
+    const th = document.createElement("th"); th.scope = "rowgroup"; th.colSpan = 6; th.textContent = SHARED.title;
+    tr.append(th);
+    SHARED.gauges.forEach(addRow);
+  }
+}
+
+/* =========================================================
+   WATERSHED SELECTION + WEB ADDRESSES (#animas, #dolores, ...)
+   ========================================================= */
+function selectWatershed(id, { push = false } = {}) {
+  if (!WATERSHEDS.some(w => w.id === id)) id = WATERSHEDS[0].id;
+  const changed = id !== state.ws;
+  state.ws = id;
+  if (push && location.hash.slice(1) !== id) history.pushState(null, "", "#" + id);
+  if (changed || !state.data) { state.data = null; state.fetchedHours = 0; }
+  load(Math.max(state.hours, 168));
+}
+window.addEventListener("hashchange", () => selectWatershed(location.hash.slice(1)));
+
+/* =========================================================
+   CONTROLS + REFRESH
+   ========================================================= */
+function syncButtons() {
+  document.querySelectorAll("[data-measure]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.measure === state.measure)));
+  document.querySelectorAll("[data-hours]").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.hours) === state.hours)));
+}
+document.querySelectorAll("[data-measure]").forEach(b => b.addEventListener("click", () => {
+  state.measure = b.dataset.measure; syncButtons(); drawGrid();
+}));
+document.querySelectorAll("[data-hours]").forEach(b => b.addEventListener("click", () => {
+  state.hours = Number(b.dataset.hours); syncButtons();
+  // A longer range needs a new request; a shorter one can reuse what's loaded.
+  if (state.data && state.fetchedHours >= state.hours) drawGrid();
+  else load(state.hours);
+}));
+document.getElementById("refresh").addEventListener("click", () => load(Math.max(state.hours, 168), { force: true }));
+document.getElementById("retry").addEventListener("click", () => load(Math.max(state.hours, 168), { force: true }));
+document.getElementById("refresh-mins").textContent = CONFIG.refreshMinutes;
+
+setInterval(() => { if (!document.hidden) load(Math.max(state.hours, 168), { force: true }); }, CONFIG.refreshMinutes * 60e3);
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
+
+syncButtons();
+const startId = location.hash.slice(1);
+state.ws = WATERSHEDS.some(w => w.id === startId) ? startId : WATERSHEDS[0].id;
+render();
+load(168); // a week covers the 24h, 72h and week views in one request
+</script>
+</body>
+</html>
