@@ -135,7 +135,7 @@ h2 {
 
 /* ---------- Controls ---------- */
 .controls { display: flex; flex-wrap: wrap; gap: 10px 20px; margin: 0 0 16px; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; background: var(--panel); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; background: var(--panel); }
 .seg button { border: 0; border-left: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--muted); padding: 6px 14px; font-size: 0.92rem; }
 .seg button:first-child { border-left: 0; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 500; }
@@ -273,12 +273,16 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
           <button type="button" data-measure="gage" aria-pressed="false">Gage height (ft)</button>
         </div>
         <div class="seg" role="group" aria-label="Time range">
-          <button type="button" data-hours="24" aria-pressed="false">24 hours</button>
-          <button type="button" data-hours="72" aria-pressed="false">72 hours</button>
-          <button type="button" data-hours="168" aria-pressed="true">Week</button>
-          <button type="button" data-hours="720" aria-pressed="false">30 days</button>
+          <button type="button" data-range="24h" aria-pressed="false">24 hours</button>
+          <button type="button" data-range="72h" aria-pressed="false">72 hours</button>
+          <button type="button" data-range="week" aria-pressed="true">Week</button>
+          <button type="button" data-range="30d" aria-pressed="false">30 days</button>
+          <button type="button" data-range="3mo" aria-pressed="false">3 months</button>
+          <button type="button" data-range="year" aria-pressed="false">Year</button>
+          <button type="button" data-range="wytd" aria-pressed="false">Water Year to Date</button>
         </div>
       </div>
+      <p class="note" id="range-note" hidden>This range shows daily mean values. Some gauges don’t publish a daily mean for gage height.</p>
       <div class="grid" id="grid"></div>
     </section>
   </div>
@@ -394,7 +398,6 @@ const SHARED = {
     { site: "09368000", name: "San Juan River at Shiprock, NM",      short: "San Juan at Shiprock",      role: "sj" },
     { site: "09371010", name: "San Juan River at Four Corners, CO",  short: "San Juan at Four Corners",  role: "sj" },
     { site: "09379500", name: "San Juan River near Bluff, UT",       short: "San Juan near Bluff",       role: "sj" },
-    { site: "09380000", name: "San Juan River near Mexican Hat, UT", short: "San Juan near Mexican Hat", role: "sj" },
   ],
 };
 
@@ -413,15 +416,32 @@ const PARAM = { discharge: "00060", gage: "00065" };
    2. USGS Water Data OGC API, the newer service (one request per gauge and measure)
    Both return Map(site -> { discharge: [{t, v}], gage: [...] })
    ========================================================= */
+// Recent readings (every 15 minutes or so), used for the short ranges and for the latest values.
 async function fetchWaterServices(sites, hours) {
   const days = Math.ceil(hours / 24);
   const url = "https://waterservices.usgs.gov/nwis/iv/?format=json"
     + "&sites=" + sites.join(",")
     + "&parameterCd=" + PARAM.discharge + "," + PARAM.gage
     + "&period=P" + days + "D&siteStatus=all";
+  return parseWaterServices(await getJson(url, "Water Services"), sites);
+}
+
+// Daily mean values, used for the longer ranges.
+async function fetchWaterServicesDaily(sites, startDate) {
+  const url = "https://waterservices.usgs.gov/nwis/dv/?format=json"
+    + "&sites=" + sites.join(",")
+    + "&parameterCd=" + PARAM.discharge + "," + PARAM.gage
+    + "&statCd=00003&startDT=" + startDate + "&siteStatus=all";
+  return parseWaterServices(await getJson(url, "Water Services daily"), sites);
+}
+
+async function getJson(url, label) {
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Water Services returned " + res.status);
-  const json = await res.json();
+  if (!res.ok) throw new Error(label + " returned " + res.status);
+  return res.json();
+}
+
+function parseWaterServices(json, sites) {
   const out = emptyResult(sites);
   for (const ts of (json.value && json.value.timeSeries) || []) {
     const site = ts.sourceInfo.siteCode[0].value;
@@ -440,14 +460,22 @@ async function fetchWaterServices(sites, hours) {
 }
 
 async function fetchOgc(sites, hours) {
-  const out = emptyResult(sites);
   const start = new Date(Date.now() - hours * 3600e3).toISOString();
+  return fetchOgcCollection("continuous", sites, start, "");
+}
+
+async function fetchOgcDaily(sites, startDate) {
+  return fetchOgcCollection("daily", sites, startDate, "&statistic_id=00003");
+}
+
+async function fetchOgcCollection(collection, sites, start, extra) {
+  const out = emptyResult(sites);
   const jobs = [];
   for (const site of sites) {
     for (const [key, code] of Object.entries(PARAM)) {
-      let url = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/continuous/items?f=json&limit=10000"
+      let url = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/" + collection + "/items?f=json&limit=10000"
         + "&monitoring_location_id=USGS-" + site
-        + "&parameter_code=" + code
+        + "&parameter_code=" + code + extra
         + "&time=" + encodeURIComponent(start + "/..");
       if (CONFIG.apiKey) url += "&api_key=" + encodeURIComponent(CONFIG.apiKey);
       jobs.push(fetchOgcPages(url).then(pts => { out.get(site)[key] = pts; }));
@@ -459,9 +487,7 @@ async function fetchOgc(sites, hours) {
 }
 
 async function fetchOgcPages(url, pages = 0) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Water Data API returned " + res.status);
-  const json = await res.json();
+  const json = await getJson(url, "Water Data API");
   const pts = (json.features || [])
     .map(f => ({ t: new Date(f.properties.time), v: Number(f.properties.value) }))
     .filter(p => Number.isFinite(p.v) && !isNaN(p.t));
@@ -477,8 +503,32 @@ function emptyResult(sites) {
 /* =========================================================
    STATE
    ========================================================= */
-const state = { ws: WATERSHEDS[0].id, measure: "discharge", hours: 168, data: null, fetchedHours: 0, updated: null, loading: false };
-const cache = new Map(); // "watershed|hours" -> { data, at }
+const RANGES = {
+  "24h":  { hours: 24 },
+  "72h":  { hours: 72 },
+  "week": { hours: 168 },
+  "30d":  { hours: 720 },
+  "3mo":  { days: 91 },
+  "year": { days: 365 },
+  "wytd": { waterYear: true },
+};
+
+// Turns a range button into a start time, and whether it uses daily means.
+// The water year starts October 1, so in November it covers about a month.
+function rangeSpec(id) {
+  const r = RANGES[id] || RANGES.week;
+  const now = new Date();
+  let start;
+  if (r.hours) start = new Date(+now - r.hours * 3600e3);
+  else if (r.days) start = new Date(+now - r.days * 86400e3);
+  else { const y = now.getMonth() >= 9 ? now.getFullYear() : now.getFullYear() - 1; start = new Date(y, 9, 1); }
+  const hours = (+now - +start) / 3600e3;
+  return { id, start, hours, daily: hours > 720 + 1 };
+}
+const isoDate = d => d3.timeFormat("%Y-%m-%d")(d);
+
+const state = { ws: WATERSHEDS[0].id, measure: "discharge", range: "week", iv: null, ivHours: 0, dv: null, updated: null, loading: false };
+const cache = new Map(); // "watershed|kind|arg" -> { data, at }
 let loadToken = 0;
 
 const currentWs = () => WATERSHEDS.find(w => w.id === state.ws) || WATERSHEDS[0];
@@ -486,40 +536,44 @@ const ownGauges = () => currentWs().gauges;
 const sharedGauges = () => (currentWs().shared ? SHARED.gauges : []);
 const allGauges = () => [...ownGauges(), ...sharedGauges()];
 
-async function load(hours, { force = false } = {}) {
-  const ws = state.ws;
-  const key = ws + "|" + hours;
-  const cached = cache.get(key);
-  if (!force && cached && Date.now() - cached.at < CONFIG.refreshMinutes * 60e3) {
-    Object.assign(state, { data: cached.data, fetchedHours: hours, updated: new Date(cached.at) });
-    setStatus("live", "Updated " + fClock(state.updated));
-    render();
-    return;
+async function getData(kind, ws, arg, force) {
+  const key = [ws, kind, arg].join("|");
+  const c = cache.get(key);
+  if (!force && c && Date.now() - c.at < CONFIG.refreshMinutes * 60e3) return c;
+  const sites = allGauges().map(g => g.site);
+  let data;
+  try { data = kind === "iv" ? await fetchWaterServices(sites, arg) : await fetchWaterServicesDaily(sites, arg); }
+  catch (e1) {
+    console.warn(e1);
+    data = kind === "iv" ? await fetchOgc(sites, arg) : await fetchOgcDaily(sites, arg);
   }
+  const entry = { data, at: Date.now() };
+  cache.set(key, entry);
+  return entry;
+}
+
+// Loads what the current tab and range need: recent readings always (for the latest values),
+// plus daily means when the range is longer than 30 days.
+async function refresh({ force = false } = {}) {
   const token = ++loadToken;
+  const ws = state.ws;
+  const spec = rangeSpec(state.range);
+  const ivHours = spec.daily ? 168 : Math.max(Math.ceil(spec.hours), 168);
   state.loading = true;
   setStatus("loading", "Loading readings from USGS");
   render();
-  const sites = allGauges().map(g => g.site);
-  let data = null;
-  try { data = await fetchWaterServices(sites, hours); }
-  catch (e1) {
-    console.warn(e1);
-    try { data = await fetchOgc(sites, hours); }
-    catch (e2) { console.warn(e2); }
+  let iv = null, dv = null, failed = false;
+  try { iv = await getData("iv", ws, ivHours, force); } catch (e) { console.warn(e); failed = true; }
+  if (spec.daily) {
+    try { dv = await getData("dv", ws, isoDate(spec.start), force); } catch (e) { console.warn(e); failed = true; }
   }
-  if (token !== loadToken) return; // the reader switched tabs while this was loading
+  if (token !== loadToken) return; // the reader switched tabs or ranges while this was loading
   state.loading = false;
-  if (!data) {
-    document.getElementById("banner").hidden = false;
-    setStatus("error", state.updated && state.data ? "Showing readings from " + fClock(state.updated) : "No readings yet");
-    render();
-    return;
-  }
-  document.getElementById("banner").hidden = true;
-  cache.set(key, { data, at: Date.now() });
-  Object.assign(state, { data, fetchedHours: hours, updated: new Date() });
-  setStatus("live", "Updated " + fClock(state.updated));
+  if (iv) Object.assign(state, { iv: iv.data, ivHours, updated: new Date(iv.at) });
+  state.dv = dv ? dv.data : null;
+  document.getElementById("banner").hidden = !failed;
+  if (iv && !failed) setStatus("live", "Updated " + fClock(state.updated));
+  else setStatus("error", state.iv ? "Showing readings from " + fClock(state.updated) : "No readings yet");
   render();
 }
 
@@ -534,14 +588,14 @@ function setStatus(s, text) {
 const fCfs = d3.format(",.0f");
 const fFt = d3.format(".2f");
 const fFtAxis = d3.format(".1f");
-const fClock = d3.timeFormat("%-I:%M %p");
-const fFull = d3.timeFormat("%b %-d, %-I:%M %p");
+const fClock = d3.timeFormat("%H:%M");
+const fFull = d3.timeFormat("%b %-d, %H:%M");
 const fSigned = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fCfs(Math.abs(v));
 const colorFor = role => role === "trib" ? "var(--iron)" : role === "sj" ? "var(--sanjuan)" : "var(--water)";
 const classFor = role => role === "trib" ? "trib" : role === "sj" ? "sj" : "";
 
 function latestFor(site) {
-  const d = state.data && state.data.get(site);
+  const d = state.iv && state.iv.get(site);
   if (!d) return {};
   const q = d.discharge, h = d.gage;
   const lastQ = q[q.length - 1], lastH = h[h.length - 1];
@@ -661,7 +715,7 @@ function drawSpine() {
 }
 
 function hasData() {
-  return !!state.data && allGauges().some(g => state.data.has(g.site));
+  return !!state.iv && allGauges().some(g => state.iv.has(g.site));
 }
 
 function jumpTo(site) {
@@ -680,8 +734,13 @@ function drawGrid() {
   const unit = isQ ? "cfs" : "ft";
   const fVal = isQ ? fCfs : fFt;
   const fAxis = isQ ? fCfs : fFtAxis;
-  const fX = state.hours <= 24 ? d3.timeFormat("%-I %p") : state.hours <= 72 ? d3.timeFormat("%a %-I %p") : d3.timeFormat("%b %-d");
-  const ready = hasData() && !(state.loading && !cache.has(state.ws + "|" + state.fetchedHours));
+  const spec = rangeSpec(state.range);
+  const source = spec.daily ? state.dv : (state.iv && state.ivHours >= spec.hours - 1 ? state.iv : null);
+  const fX = spec.hours <= 24 ? d3.timeFormat("%H:%M") : spec.hours <= 72 ? d3.timeFormat("%a %H:%M")
+    : spec.hours <= 24 * 100 ? d3.timeFormat("%b %-d") : d3.timeFormat("%b %Y");
+  const fTip = spec.daily ? (d => d3.timeFormat("%b %-d, %Y")(d) + ", daily mean") : fFull;
+  const ready = !!source && allGauges().some(g => source.has(g.site));
+  document.getElementById("range-note").hidden = !spec.daily;
 
   const addCard = (g) => {
     const card = document.createElement("article");
@@ -704,15 +763,15 @@ function drawGrid() {
     grid.append(card);
 
     if (!ready) { const sk = document.createElement("div"); sk.className = "gauge-chart skeleton"; card.append(sk); return; }
-    const cutoff = Date.now() - state.hours * 3600e3;
-    const series = ((state.data.get(g.site) || {})[key] || []).filter(p => +p.t >= cutoff);
+    const cutoff = +spec.start;
+    const series = ((source.get(g.site) || {})[key] || []).filter(p => +p.t >= cutoff);
     if (series.length < 2) {
       const e = document.createElement("div"); e.className = "gauge-empty";
       e.textContent = isQ ? "No discharge readings in this time range." : "This gauge has no gage height readings in this time range.";
       card.append(e); return;
     }
     const box = document.createElement("div"); box.className = "gauge-chart"; card.append(box);
-    drawChart(box, series, colorFor(g.role), { fVal, fAxis, fX, unit, id: g.site });
+    drawChart(box, series, colorFor(g.role), { fVal, fAxis, fX, fTip, unit, id: g.site });
   };
 
   ownGauges().forEach(addCard);
@@ -725,7 +784,7 @@ function drawGrid() {
   }
 }
 
-function drawChart(box, series, color, { fVal, fAxis, fX, unit, id }) {
+function drawChart(box, series, color, { fVal, fAxis, fX, fTip, unit, id }) {
   const W = Math.max(200, box.clientWidth), H = 120;
   const svg = d3.select(box).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%").attr("height", H).style("display", "block");
   const ext = d3.extent(series, p => p.v);
@@ -776,7 +835,7 @@ function drawChart(box, series, color, { fVal, fAxis, fX, unit, id }) {
       if (!p) return;
       dot.attr("cx", x(p.t)).attr("cy", y(p.v)).style("display", null);
       tip.replaceChildren();
-      const t = document.createElement("div"); t.className = "t"; t.textContent = fFull(p.t);
+      const t = document.createElement("div"); t.className = "t"; t.textContent = fTip(p.t);
       const v = document.createElement("div"); v.textContent = fVal(p.v) + " " + unit;
       tip.append(t, v); tip.hidden = false;
       const [bx, by] = d3.pointer(ev, box);
@@ -822,8 +881,8 @@ function selectWatershed(id, { push = false } = {}) {
   const changed = id !== state.ws;
   state.ws = id;
   if (push && location.hash.slice(1) !== id) history.pushState(null, "", "#" + id);
-  if (changed || !state.data) { state.data = null; state.fetchedHours = 0; }
-  load(Math.max(state.hours, 168));
+  if (changed) Object.assign(state, { iv: null, ivHours: 0, dv: null });
+  refresh();
 }
 window.addEventListener("hashchange", () => selectWatershed(location.hash.slice(1)));
 
@@ -832,22 +891,23 @@ window.addEventListener("hashchange", () => selectWatershed(location.hash.slice(
    ========================================================= */
 function syncButtons() {
   document.querySelectorAll("[data-measure]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.measure === state.measure)));
-  document.querySelectorAll("[data-hours]").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.hours) === state.hours)));
+  document.querySelectorAll("[data-range]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.range === state.range)));
 }
 document.querySelectorAll("[data-measure]").forEach(b => b.addEventListener("click", () => {
   state.measure = b.dataset.measure; syncButtons(); drawGrid();
 }));
-document.querySelectorAll("[data-hours]").forEach(b => b.addEventListener("click", () => {
-  state.hours = Number(b.dataset.hours); syncButtons();
-  // A longer range needs a new request; a shorter one can reuse what's loaded.
-  if (state.data && state.fetchedHours >= state.hours) drawGrid();
-  else load(state.hours);
+document.querySelectorAll("[data-range]").forEach(b => b.addEventListener("click", () => {
+  state.range = b.dataset.range; syncButtons();
+  const spec = rangeSpec(state.range);
+  // A short range inside what's already loaded redraws at once; anything else loads first.
+  if (!spec.daily && state.iv && state.ivHours >= spec.hours - 1) drawGrid();
+  else refresh();
 }));
-document.getElementById("refresh").addEventListener("click", () => load(Math.max(state.hours, 168), { force: true }));
-document.getElementById("retry").addEventListener("click", () => load(Math.max(state.hours, 168), { force: true }));
+document.getElementById("refresh").addEventListener("click", () => refresh({ force: true }));
+document.getElementById("retry").addEventListener("click", () => refresh({ force: true }));
 document.getElementById("refresh-mins").textContent = CONFIG.refreshMinutes;
 
-setInterval(() => { if (!document.hidden) load(Math.max(state.hours, 168), { force: true }); }, CONFIG.refreshMinutes * 60e3);
+setInterval(() => { if (!document.hidden) refresh({ force: true }); }, CONFIG.refreshMinutes * 60e3);
 let resizeTimer;
 window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
 
@@ -855,7 +915,7 @@ syncButtons();
 const startId = location.hash.slice(1);
 state.ws = WATERSHEDS.some(w => w.id === startId) ? startId : WATERSHEDS[0].id;
 render();
-load(168); // a week covers the 24h, 72h and week views in one request
+refresh(); // a week of recent readings covers the 24h, 72h and week views in one request
 </script>
 </body>
 </html>
