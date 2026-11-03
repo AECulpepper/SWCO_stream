@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SW Colorado Stream Gauges</title>
-<meta name="description" content="Live streamflow and gage height from USGS gauges in the Animas, Upper San Juan, La Plata, Mancos and Dolores watersheds of southwest Colorado.">
+<meta name="description" content="Live streamflow and gage height from USGS gauges in the Animas, Upper San Juan, Los Pinos, Piedra, La Plata, Mancos and Dolores watersheds of southwest Colorado.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet">
@@ -74,6 +74,8 @@ a:hover { text-decoration-thickness: 2px; }
   margin: 0 0 10px;
 }
 .site-head .lede { margin: 0; color: var(--muted); max-width: 60ch; font-size: 1.05rem; }
+.prov { margin: 10px 0 0; font-size: 0.88rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.prov-tag { display: inline-block; font-weight: 600; font-size: 0.78rem; letter-spacing: 0.02em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--line); background: var(--panel); border-radius: var(--r-sm); padding: 2px 8px; }
 .status { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--muted); }
 .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
 .status[data-state="live"] .dot { background: var(--water); }
@@ -228,7 +230,8 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
   <header class="site-head">
     <div>
       <h1>SW Colorado Stream Gauges</h1>
-      <p class="lede">Live readings from USGS gauges across five watersheds of southwest Colorado.</p>
+      <p class="lede">Live readings from USGS gauges across six watersheds of southwest Colorado. This site is in development and bugs should be expected. If you have any feedback, please contact <a href="mailto:anthony@mountainstudies.org">anthony@mountainstudies.org</a>.</p>
+      <p class="prov"><span class="prov-tag">Provisional USGS data</span> Recent readings are provisional and may be revised by USGS.</p>
     </div>
     <div class="status" id="status" data-state="loading" aria-live="polite">
       <span class="dot" aria-hidden="true"></span>
@@ -354,6 +357,17 @@ const WATERSHEDS = [
     ],
   },
   {
+    id: "los-pinos-piedra", name: "Los Pinos & Piedra", sub: "Into Navajo Lake", title: "Los Pinos and Piedra Rivers",
+    blurb: "Two rivers that flow into Navajo Lake: the Piedra near Arboles, and the Los Pinos with Vallecito Creek near Bayfield.",
+    shared: true, joinNote: "Both rivers flow into Navajo Lake, and the San Juan continues below Navajo Dam.",
+    gauges: [
+      // "river" keeps separate rivers on one tab from being joined on the river spine.
+      { site: "09349800", name: "Piedra River near Arboles, CO",      short: "Piedra near Arboles",     role: "main", river: "piedra" },
+      { site: "09352900", name: "Vallecito Creek near Bayfield, CO",  short: "Vallecito Creek",         role: "trib", river: "los-pinos" },
+      { site: "09353500", name: "Los Pinos River near Bayfield, CO",  short: "Los Pinos near Bayfield", role: "main", river: "los-pinos" },
+    ],
+  },
+  {
     id: "la-plata", name: "La Plata", sub: "Hesperus to the state line", title: "La Plata River",
     blurb: "From Hesperus down to the Colorado–New Mexico state line.",
     shared: true, joinNote: "The La Plata joins the San Juan near Farmington.",
@@ -381,9 +395,9 @@ const WATERSHEDS = [
       { site: "09166500", name: "Dolores River at Dolores, CO",                short: "Dolores at Dolores",           role: "main" },
       { site: "09168730", name: "Dolores River near Slick Rock, CO",           short: "Dolores near Slick Rock",      role: "main" },
       { site: "09169500", name: "Dolores River at Bedrock, CO",                short: "Dolores at Bedrock",           role: "main" },
-      { site: "09171310", name: "South Fork San Miguel River near Ophir, CO",  short: "S Fork San Miguel near Ophir", role: "trib" },
-      { site: "09172500", name: "San Miguel River near Placerville, CO",       short: "San Miguel near Placerville",  role: "trib" },
-      { site: "09177000", name: "San Miguel River at Uravan, CO",              short: "San Miguel at Uravan",         role: "trib" },
+      { site: "09171310", name: "South Fork San Miguel River near Ophir, CO",  short: "S Fork San Miguel near Ophir", role: "trib", river: "san-miguel" },
+      { site: "09172500", name: "San Miguel River near Placerville, CO",       short: "San Miguel near Placerville",  role: "trib", river: "san-miguel" },
+      { site: "09177000", name: "San Miguel River at Uravan, CO",              short: "San Miguel at Uravan",         role: "trib", river: "san-miguel" },
       { site: "09180000", name: "Dolores River near Cisco, UT",                short: "Dolores near Cisco",           role: "main" },
     ],
   },
@@ -678,20 +692,25 @@ function drawSpine() {
     const stem = pos.filter(p => p.group === group && p.g.role !== "trib");
     for (let i = 0; i < stem.length - 1; i++) {
       const a = stem[i], b = stem[i + 1];
+      if ((a.g.river || "") !== (b.g.river || "")) continue; // different rivers on one tab
       svg.append("line").attr("x1", mainX).attr("x2", mainX).attr("y1", a.y).attr("y2", b.y)
         .attr("stroke", group === "shared" ? "var(--sanjuan)" : "var(--water)").attr("stroke-linecap", "round")
         .attr("stroke-width", a.l.q != null ? width(a.l.q) : 2)
         .attr("opacity", a.l.q != null ? 0.55 : 0.2);
     }
   }
-  // Tributaries: an elbow joining the main stem just below the gauge.
-  for (const p of pos.filter(p => p.g.role === "trib")) {
-    const joinY = p.y + rowH * 0.55;
-    svg.append("path").attr("d", `M${p.x},${p.y} V${joinY} H${mainX}`)
+  // Tributaries: consecutive gauges on the same tributary (same "river") share one branch;
+  // the last gauge on a branch elbows into the main stem just below it.
+  pos.forEach((p, i) => {
+    if (p.g.role !== "trib") return;
+    const next = pos[i + 1];
+    const sameBranch = next && next.g.role === "trib" && p.g.river && next.g.river === p.g.river;
+    const d = sameBranch ? `M${p.x},${p.y} V${next.y}` : `M${p.x},${p.y} V${p.y + rowH * 0.55} H${mainX}`;
+    svg.append("path").attr("d", d)
       .attr("fill", "none").attr("stroke", "var(--iron)").attr("stroke-linejoin", "round").attr("stroke-linecap", "round")
       .attr("stroke-width", p.l.q != null ? width(p.l.q) : 2)
       .attr("opacity", p.l.q != null ? 0.6 : 0.2);
-  }
+  });
   // Group heading for the shared San Juan gauges
   if (headY != null) {
     svg.append("line").attr("x1", 0).attr("x2", W).attr("y1", headY - 22).attr("y2", headY - 22)
