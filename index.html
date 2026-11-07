@@ -26,6 +26,8 @@
   --iron: #B5652B;      /* tributaries */
   --spruce: #2F5D50;    /* links, focus */
   --sanjuan: #2F5D50;   /* San Juan below Navajo Lake */
+  --colorado: #7A4E86;  /* Colorado below the Dolores */
+  --res: #3D5A8A;       /* reservoirs */
   --bad: #A23B2A;
   --font: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
@@ -44,6 +46,8 @@
     --iron: #D9894F;
     --spruce: #8CC4B3;
     --sanjuan: #8CC4B3;
+    --colorado: #C6A3D1;
+    --res: #9DB4DE;
     --bad: #E07A66;
   }
 }
@@ -75,6 +79,7 @@ a:hover { text-decoration-thickness: 2px; }
 }
 .site-head .lede { margin: 0; color: var(--muted); max-width: 60ch; font-size: 1.05rem; }
 .prov { margin: 10px 0 0; font-size: 0.88rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.prov-2 { margin-top: 6px; }
 .prov-tag { display: inline-block; font-weight: 600; font-size: 0.78rem; letter-spacing: 0.02em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--line); background: var(--panel); border-radius: var(--r-sm); padding: 2px 8px; }
 .status { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--muted); }
 .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
@@ -211,8 +216,30 @@ footer p { margin: 0 0 6px; }
 .ws-head p { margin: 2px 0 0; color: var(--muted); }
 .ws-count { color: var(--muted); font-size: 0.95rem; }
 
+/* ---------- Flood peaks ---------- */
+.flood { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--iron); border-radius: var(--r-md); padding: 18px 20px 14px; margin-bottom: 28px; }
+.flood .note { margin-bottom: 10px; }
+.flood-toggle { margin-bottom: 6px; }
+.flood-in-grid { grid-column: 1 / -1; margin-bottom: 0; border-left-color: var(--sanjuan); }
+.flood-item + .flood-item { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 14px; }
+.flood-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
+.flood-name { font-weight: 600; font-size: 1.05rem; }
+.flood-big { font-family: var(--font-display); font-weight: 600; font-size: 1.9rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.flood-big small { font-family: var(--font); font-weight: 400; font-size: 0.85rem; color: var(--muted); margin-left: 4px; }
+.flood-summary { margin: 6px 0 4px; max-width: 75ch; }
+.flood-chart { position: relative; margin-top: 4px; }
+.flood-label { font-size: 12px; fill: var(--ink); font-weight: 500; }
+.flood-label.muted { fill: var(--muted); font-weight: 400; }
+
 /* ---------- Shared San Juan group ---------- */
 .gauge.sj { border-left-color: var(--sanjuan); }
+.gauge.co { border-left-color: var(--colorado); }
+td .swatch.co { background: var(--colorado); }
+.river .legend .co::before { background: var(--colorado); }
+.gauge.res { border-left-color: var(--res); }
+.gauge-sub { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+.river .legend .res::before { background: var(--res); height: 8px; border-radius: 2px; }
+td .swatch.res { background: var(--res); }
 .group-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 12px; padding-top: 14px; border-top: 1px dashed var(--line); }
 .group-head h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; color: var(--sanjuan); }
 .group-head span { color: var(--muted); font-size: 0.9rem; }
@@ -232,6 +259,7 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
       <h1>SW Colorado Stream Gauges</h1>
       <p class="lede">Live readings from USGS gauges across six watersheds of southwest Colorado. This site is in development and bugs should be expected. If you have any feedback, please contact <a href="mailto:anthony@mountainstudies.org">anthony@mountainstudies.org</a>.</p>
       <p class="prov"><span class="prov-tag">Provisional USGS data</span> Recent readings are provisional and may be revised by USGS.</p>
+      <p class="prov prov-2"><span class="prov-tag">Gauge outages</span> Due to recent floods, some gauges are inoperative.</p>
     </div>
     <div class="status" id="status" data-state="loading" aria-live="polite">
       <span class="dot" aria-hidden="true"></span>
@@ -263,11 +291,16 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
       <p class="note">Line width follows the latest discharge. Select a gauge to jump to its chart.</p>
       <div id="spine"></div>
       <div class="legend">
-        <span class="main">Main stem</span><span class="trib">Tributary</span><span class="sj" id="legend-sj">San Juan below Navajo Lake</span>
+        <span class="main">Main stem</span><span class="trib">Tributary</span><span class="sj" id="legend-sj">San Juan below Navajo Lake</span><span class="res" id="legend-res">Reservoir</span>
       </div>
     </aside>
 
     <section aria-labelledby="trends-title">
+      <section class="flood" id="flood-section" aria-labelledby="flood-title" hidden>
+        <h2 id="flood-title">October 2026 flood peaks</h2>
+        <p class="note">The highest discharge or gage height recorded during the October 2026 floods, compared with every annual peak on record. October values are provisional and may be revised by USGS.</p>
+        <div id="flood"></div>
+      </section>
       <h2 id="trends-title">Recent trends</h2>
       <p class="note">Each gauge has its own scale, since tributaries run far smaller than the main stem. Times are shown in your local time zone.</p>
       <div class="controls">
@@ -311,7 +344,7 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
   </section>
 
   <footer>
-    <p>Data from the <a href="https://waterdata.usgs.gov/" rel="noopener">U.S. Geological Survey</a>. Recent readings are provisional and may be revised by USGS.</p>
+    <p>Data from the <a href="https://waterdata.usgs.gov/" rel="noopener">U.S. Geological Survey</a> and the <a href="https://dwr.state.co.us/tools/stations" rel="noopener">Colorado Division of Water Resources</a>. Recent readings are provisional and may be revised by each agency.</p>
     <p>Readings refresh automatically every <span id="refresh-mins">15</span> minutes while this page is open.</p>
   </footer>
 </div>
@@ -327,7 +360,59 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
    ========================================================= */
 const WATERSHEDS = [
   {
-    id: "animas", name: "Animas", sub: "Silverton to Farmington", title: "Animas River",
+    id: "dolores", name: "Dolores", sub: "Rico, CO to Colorado River", title: "Dolores River",
+    blurb: "From below Rico through McPhee Reservoir to Gateway, with the San Miguel.",
+    shared: "colorado", joinNote: "The Dolores joins the Colorado above Cisco, Utah.",
+    gauges: [
+      { site: "09165000", name: "Dolores River below Rico, CO",               short: "Dolores below Rico",           role: "main", floodPeak: true },
+      { site: "LOSDOLCO", agency: "dwr", name: "Lost Canyon Creek near Dolores", short: "Lost Canyon Creek", role: "trib", river: "lost-canyon" },
+      { site: "09166500", name: "Dolores River at Dolores, CO",                short: "Dolores at Dolores",           role: "main", floodPeak: true },
+      { site: "res-mcphee", name: "McPhee Reservoir",                          short: "McPhee Reservoir",             role: "res", fullPool: 6924,
+        link: { href: "https://dwr.state.co.us/tools/Stations/MCPRESCO", text: "Colorado DWR MCPRESCO" },
+        sources: [{ type: "dwr", abbrev: "MCPRESCO", params: ["ELEV", "RES_ELEV", "ELEV_RES", "ELEVATION", "GAGE_HT"] }],
+        percentFull: { abbrev: "MCPRESCO", param: "STORAGE", capacity: null } },
+      { site: "DOLBMCCO", agency: "dwr", name: "Dolores River below McPhee", short: "Dolores below McPhee", role: "main" },
+      { site: "09168730", name: "Dolores River near Slick Rock, CO",           short: "Dolores near Slick Rock",      role: "main" },
+      { site: "09169500", name: "Dolores River at Bedrock, CO",                short: "Dolores at Bedrock",           role: "main" },
+      { site: "09171240", name: "Lake Fork San Miguel River above Trout Lake, CO", short: "Lake Fork above Trout Lake", role: "trib", river: "san-miguel" },
+      { site: "09171310", name: "South Fork San Miguel River near Ophir, CO",  short: "S Fork San Miguel near Ophir", role: "trib", river: "san-miguel" },
+      { site: "09172500", name: "San Miguel River near Placerville, CO",       short: "San Miguel near Placerville",  role: "trib", river: "san-miguel" },
+      { site: "09174600", name: "San Miguel River at Brooks Bridge, CO", short: "San Miguel at Brooks Bridge", role: "trib", river: "san-miguel" },
+      { site: "09177000", name: "San Miguel River at Uravan, CO",              short: "San Miguel at Uravan",         role: "trib", river: "san-miguel" },
+      { site: "09179450", name: "Dolores River at Gateway, CO", short: "Dolores at Gateway", role: "main" },
+    ],
+  },
+  {
+    id: "mancos", name: "Mancos", sub: "Mancos, CO to Towaoc, CO", title: "Mancos River",
+    blurb: "From above the town of Mancos down past Towaoc toward Four Corners.",
+    shared: true, joinNote: "The Mancos joins the San Juan near Four Corners.",
+    gauges: [
+      { site: "MANJACCO", agency: "dwr", name: "West Mancos below Jackson Gulch", short: "West Mancos below Jackson Gulch", role: "trib", river: "west-mancos" },
+      { site: "MANMANCO", agency: "dwr", name: "Mancos River near Mancos", short: "Mancos near Mancos", role: "main",
+        // October peak from this DWR station; annual peaks on record from the USGS gauge near Mancos.
+        floodPeak: { records: "09370000", recordsLabel: "USGS 09370000 near Mancos" } },
+      { site: "MANCHICO", agency: "dwr", name: "Mancos River at CJ’s Bridge", short: "Mancos at CJ’s Bridge", role: "main" },
+      { site: "09371000", name: "Mancos River near Towaoc, CO", short: "Mancos near Towaoc", role: "main", floodPeak: true },
+    ],
+  },
+  {
+    id: "la-plata", name: "La Plata", sub: "Hesperus, CO to Farmington, NM", title: "La Plata River",
+    blurb: "From Hesperus across the Colorado–New Mexico state line to Farmington, New Mexico, with Cherry Creek.",
+    shared: true, joinNote: "The La Plata joins the San Juan near Farmington.",
+    gauges: [
+      { site: "LAPHESCO", agency: "dwr", name: "La Plata River at Hesperus", short: "La Plata at Hesperus", role: "main",
+        // October peak from this DWR station; annual peaks on record from the long-running USGS gauge at Hesperus.
+        floodPeak: { records: "09365500", recordsLabel: "USGS 09365500 at Hesperus" } },
+      { site: "LAPBRECO", agency: "dwr", name: "La Plata River at Breen", short: "La Plata at Breen", role: "main" },
+      { site: "CHEREDCO", agency: "dwr", name: "Cherry Creek above La Plata", short: "Cherry Creek above La Plata", role: "trib", river: "cherry-creek" },
+      { site: "LAPCHECO", agency: "dwr", name: "La Plata River below Cherry Creek", short: "La Plata below Cherry Creek", role: "main" },
+      { site: "LAPLONCO", agency: "dwr", name: "La Plata River below Long Hollow", short: "La Plata below Long Hollow", role: "main" },
+      { site: "09367000", name: "La Plata River at La Plata, NM", short: "La Plata at La Plata, NM", role: "main" },
+      { site: "09367500", name: "La Plata River near Farmington, NM", short: "La Plata near Farmington", role: "main", floodPeak: true },
+    ],
+  },
+  {
+    id: "animas", name: "Animas", sub: "Silverton, CO to Farmington, NM", title: "Animas River",
     blurb: "From the headwaters above Silverton through Durango to the San Juan River at Farmington.",
     shared: true, joinNote: "The Animas joins the San Juan at Farmington.",
     gauges: [
@@ -335,12 +420,40 @@ const WATERSHEDS = [
       { site: "09358550", name: "Cement Creek at Silverton, CO",                        short: "Cement Creek",           role: "trib" },
       { site: "09359010", name: "Mineral Creek at Silverton, CO",                       short: "Mineral Creek",          role: "trib" },
       { site: "09359020", name: "Animas River below Silverton, CO",                     short: "Animas below Silverton", role: "main" },
+      { site: "09359080", name: "Cascade Creek",                                         short: "Cascade Creek",          role: "trib" },
       { site: "09359500", name: "Animas River at Tall Timbers Resort above Tacoma, CO", short: "Animas above Tacoma",    role: "main" },
       { site: "09361000", name: "Hermosa Creek near Hermosa, CO",                       short: "Hermosa Creek",          role: "trib" },
-      { site: "09361500", name: "Animas River at Durango, CO",                          short: "Animas at Durango",      role: "main" },
+      { site: "09361500", name: "Animas River at Durango, CO",                          short: "Animas at Durango",      role: "main", floodPeak: true },
       { site: "09362520", name: "Animas River at Pump Plant",                           short: "Animas at Pump Plant",   role: "main" },
+      { site: "FLOALECO", agency: "dwr", name: "Florida River above Lemmon", short: "Florida River above Lemmon", role: "trib", river: "florida" },
+      { site: "res-lemmon", name: "Lemmon Reservoir", short: "Lemmon Reservoir", role: "res", branch: true, river: "florida", fullPool: 8148,
+        link: { href: "https://dwr.state.co.us/tools/Stations/LEMRESCO", text: "Colorado DWR LEMRESCO" },
+        // Elevation: the page tries these DWR parameter names in order. Pin the right one first once known.
+        sources: [{ type: "dwr", abbrev: "LEMRESCO", params: ["ELEV", "RES_ELEV", "ELEV_RES", "ELEVATION", "GAGE_HT"] }],
+        // Percent full = latest storage / capacity (acre-feet). Fill in capacity to show it.
+        percentFull: { abbrev: "LEMRESCO", param: "STORAGE", capacity: null } },
+      { site: "FLOBLECO", agency: "dwr", name: "Florida River below Lemmon", short: "Florida River below Lemmon", role: "trib", river: "florida" },
+      { site: "FLOBONCO", agency: "dwr", name: "Florida River at Bondad", short: "Florida River at Bondad", role: "trib", river: "florida" },
       { site: "09363500", name: "Animas River near Cedar Hill, NM",                     short: "Animas near Cedar Hill", role: "main" },
       { site: "09364500", name: "Animas River at Farmington, NM",                       short: "Animas at Farmington",   role: "main" },
+    ],
+  },
+  {
+    id: "los-pinos-piedra", name: "Los Pinos & Piedra", sub: "Into Navajo Lake", title: "Los Pinos and Piedra Rivers",
+    blurb: "Two rivers that flow into Navajo Lake: the Piedra near Arboles, and the Los Pinos from Ignacio down to La Boca, with Vallecito Creek.",
+    shared: true, joinNote: "Both rivers flow into Navajo Lake, and the San Juan continues below Navajo Dam.",
+    gauges: [
+      // "river" keeps separate rivers on one tab from being joined on the river spine.
+      { site: "09349800", name: "Piedra River near Arboles, CO",      short: "Piedra near Arboles",     role: "main", river: "piedra", floodPeak: true },
+      { site: "09352800", name: "Los Pinos River above Vallecito Reservoir, CO", short: "Los Pinos above Vallecito", role: "main", river: "los-pinos" },
+      { site: "09352900", name: "Vallecito Creek near Bayfield, CO",  short: "Vallecito Creek",         role: "trib", river: "los-pinos" },
+      { site: "res-vallecito", name: "Vallecito Reservoir", short: "Vallecito Reservoir", role: "res", river: "los-pinos", fullPool: 7665,
+        link: { href: "https://dwr.state.co.us/tools/Stations/VALRESCO", text: "Colorado DWR VALRESCO" },
+        sources: [{ type: "dwr", abbrev: "VALRESCO", params: ["ELEV", "RES_ELEV", "ELEV_RES", "ELEVATION", "GAGE_HT"] }],
+        percentFull: { abbrev: "VALRESCO", param: "STORAGE", capacity: null } },
+      { site: "PINBVACO", agency: "dwr", name: "Pine River below Vallecito", short: "Pine River below Vallecito", role: "main", river: "los-pinos" },
+      { site: "09353800", name: "Los Pinos River near Ignacio, CO",   short: "Los Pinos near Ignacio",  role: "main", river: "los-pinos" },
+      { site: "09354500", name: "Los Pinos River at La Boca, CO",     short: "Los Pinos at La Boca",    role: "main", river: "los-pinos", floodPeak: true },
     ],
   },
   {
@@ -348,81 +461,85 @@ const WATERSHEDS = [
     blurb: "The San Juan from Pagosa Springs down to Navajo Lake, with the West Fork, Rio Blanco and Navajo River.",
     shared: true, joinNote: "The San Juan continues below Navajo Dam.",
     gauges: [
-      { site: "09341500", name: "West Fork San Juan River near Pagosa Springs, CO",  short: "West Fork San Juan",          role: "trib" },
-      { site: "09342500", name: "San Juan River at Pagosa Springs, CO",              short: "San Juan at Pagosa Springs",  role: "main" },
-      { site: "09343000", name: "Rio Blanco near Pagosa Springs, CO",                short: "Rio Blanco",                  role: "trib" },
-      { site: "09344000", name: "Navajo River at Banded Peak Ranch near Chromo, CO", short: "Navajo River at Banded Peak", role: "trib" },
-      { site: "09346000", name: "Navajo River at Edith, CO",                         short: "Navajo River at Edith",       role: "trib" },
+      { site: "09341500", name: "West Fork San Juan River near Pagosa Springs, CO",  short: "West Fork San Juan",          role: "trib", river: "west-fork" },
+      { site: "09342500", name: "San Juan River at Pagosa Springs, CO",              short: "San Juan at Pagosa Springs",  role: "main", floodPeak: true },
+      { site: "BLADIVCO", agency: "dwr", dwrParams: { discharge: "DISCHRG2" }, diversion: "sjc", name: "Blanco Diversion", short: "Blanco Diversion", role: "trib", river: "rio-blanco" },
+      { site: "RIOBLACO", agency: "dwr", dwrParams: { discharge: "DISCHRG1" }, name: "Rio Blanco below Diversion", short: "Rio Blanco below Diversion", role: "trib", river: "rio-blanco" },
+      { site: "RIOMOUCO", agency: "dwr", name: "Rio Blanco near Trujillo", short: "Rio Blanco near Trujillo", role: "trib", river: "rio-blanco" },
+      { site: "NAVBANCO", agency: "dwr", name: "Navajo River at Banded Peak", short: "Navajo River at Banded Peak", role: "trib", river: "navajo" },
+      { site: "OSODIVCO", agency: "dwr", dwrParams: { discharge: "DISCHRG2" }, diversion: "sjc", name: "Oso Diversion", short: "Oso Diversion", role: "trib", river: "navajo" },
+      { site: "NAVOSOCO", agency: "dwr", dwrParams: { discharge: "DISCHRG1" }, name: "Navajo River below Oso Diversion", short: "Navajo below Oso Diversion", role: "trib", river: "navajo" },
+      { site: "LOSODVCO", agency: "dwr", diversion: "sjc", name: "Little Oso Diversion", short: "Little Oso Diversion", role: "trib", river: "little-oso", joins: "navajo" },
+      { site: "LITOSOCO", agency: "dwr", name: "Little Oso below Diversion", short: "Little Oso below Diversion", role: "trib", river: "little-oso", joins: "navajo" },
       { site: "09346400", name: "San Juan River near Carracas, CO",                  short: "San Juan near Carracas",      role: "main" },
-    ],
-  },
-  {
-    id: "los-pinos-piedra", name: "Los Pinos & Piedra", sub: "Into Navajo Lake", title: "Los Pinos and Piedra Rivers",
-    blurb: "Two rivers that flow into Navajo Lake: the Piedra near Arboles, and the Los Pinos with Vallecito Creek near Bayfield.",
-    shared: true, joinNote: "Both rivers flow into Navajo Lake, and the San Juan continues below Navajo Dam.",
-    gauges: [
-      // "river" keeps separate rivers on one tab from being joined on the river spine.
-      { site: "09349800", name: "Piedra River near Arboles, CO",      short: "Piedra near Arboles",     role: "main", river: "piedra" },
-      { site: "09352900", name: "Vallecito Creek near Bayfield, CO",  short: "Vallecito Creek",         role: "trib", river: "los-pinos" },
-      { site: "09353500", name: "Los Pinos River near Bayfield, CO",  short: "Los Pinos near Bayfield", role: "main", river: "los-pinos" },
-    ],
-  },
-  {
-    id: "la-plata", name: "La Plata", sub: "Hesperus to the state line", title: "La Plata River",
-    blurb: "From Hesperus down to the Colorado–New Mexico state line.",
-    shared: true, joinNote: "The La Plata joins the San Juan near Farmington.",
-    gauges: [
-      { site: "09365500", name: "La Plata River at Hesperus, CO",                    short: "La Plata at Hesperus",   role: "main" },
-      { site: "09366500", name: "La Plata River at Colorado–New Mexico state line",  short: "La Plata at state line", role: "main" },
-    ],
-  },
-  {
-    id: "mancos", name: "Mancos", sub: "Mancos to Towaoc", title: "Mancos River",
-    blurb: "From above the town of Mancos down past Towaoc toward Four Corners.",
-    shared: true, joinNote: "The Mancos joins the San Juan near Four Corners.",
-    gauges: [
-      { site: "09370000", name: "Mancos River near Mancos, CO", short: "Mancos near Mancos", role: "main" },
-      { site: "09371000", name: "Mancos River near Towaoc, CO", short: "Mancos near Towaoc", role: "main" },
-    ],
-  },
-  {
-    id: "dolores", name: "Dolores", sub: "Rico to Cisco", title: "Dolores River",
-    blurb: "From below Rico through McPhee Reservoir to Cisco, Utah, with the West Dolores and San Miguel.",
-    shared: false,
-    gauges: [
-      { site: "09165000", name: "Dolores River below Rico, CO",               short: "Dolores below Rico",           role: "main" },
-      { site: "09166000", name: "West Dolores River near Stoner, CO",          short: "West Dolores",                 role: "trib" },
-      { site: "09166500", name: "Dolores River at Dolores, CO",                short: "Dolores at Dolores",           role: "main" },
-      { site: "09168730", name: "Dolores River near Slick Rock, CO",           short: "Dolores near Slick Rock",      role: "main" },
-      { site: "09169500", name: "Dolores River at Bedrock, CO",                short: "Dolores at Bedrock",           role: "main" },
-      { site: "09171310", name: "South Fork San Miguel River near Ophir, CO",  short: "S Fork San Miguel near Ophir", role: "trib", river: "san-miguel" },
-      { site: "09172500", name: "San Miguel River near Placerville, CO",       short: "San Miguel near Placerville",  role: "trib", river: "san-miguel" },
-      { site: "09177000", name: "San Miguel River at Uravan, CO",              short: "San Miguel at Uravan",         role: "trib", river: "san-miguel" },
-      { site: "09180000", name: "Dolores River near Cisco, UT",                short: "Dolores near Cisco",           role: "main" },
     ],
   },
 ];
 
-// San Juan gauges below Navajo Lake, shown on every watershed with shared: true.
-const SHARED = {
-  title: "San Juan River below Navajo Lake",
-  gauges: [
-    { site: "09355500", name: "San Juan River near Archuleta, NM",   short: "San Juan near Archuleta",   role: "sj" },
-    { site: "09365000", name: "San Juan River at Farmington, NM",    short: "San Juan at Farmington",    role: "sj" },
-    { site: "09368000", name: "San Juan River at Shiprock, NM",      short: "San Juan at Shiprock",      role: "sj" },
-    { site: "09371010", name: "San Juan River at Four Corners, CO",  short: "San Juan at Four Corners",  role: "sj" },
-    { site: "09379500", name: "San Juan River near Bluff, UT",       short: "San Juan near Bluff",       role: "sj" },
-  ],
+// Lake Powell ends both the San Juan and the Colorado, so both shared groups use this one entry.
+const POWELL = { site: "res-powell", name: "Lake Powell", short: "Lake Powell", role: "res", fullPool: 3700,
+  link: { href: "https://waterdata.usgs.gov/monitoring-location/USGS-09379900/", text: "USGS 09379900" },
+  sources: [{ type: "usgs", site: "09379900" }, { type: "usgs-new", site: "09379900" }, { type: "bor", hdb: 919 }] };
+
+/* Shared groups: gauges shown after a watershed's own gauges, on every tab whose "shared" names the group.
+   (shared: true means the San Juan group.) */
+const SHARED_GROUPS = {
+  sanjuan: {
+    title: "San Juan River below Navajo Lake", short: "the San Juan below Navajo Lake", role: "sj",
+    note: "These gauges appear on every San Juan Basin tab.", floodTitle: "flood peaks on the San Juan",
+    gauges: [
+      { site: "res-navajo", name: "Navajo Lake",                  short: "Navajo Lake",          role: "res", fullPool: 6085,
+        link: { href: "https://water.usace.army.mil/overview/spa/locations/navajo", text: "USACE Navajo" },
+        sources: [{ type: "usace", office: "SPA", location: "Navajo" }, { type: "bor", hdb: 920 }] },
+      { site: "09355500", name: "San Juan River near Archuleta, NM",   short: "San Juan near Archuleta",   role: "sj" },
+      { site: "09365000", name: "San Juan River at Farmington, NM",    short: "San Juan at Farmington",    role: "sj", floodPeak: true },
+      { site: "09368000", name: "San Juan River at Shiprock, NM",      short: "San Juan at Shiprock",      role: "sj" },
+      { site: "09371010", name: "San Juan River at Four Corners, CO",  short: "San Juan at Four Corners",  role: "sj", floodPeak: true },
+      { site: "09379500", name: "San Juan River near Bluff, UT",       short: "San Juan near Bluff",       role: "sj" },
+      POWELL,
+    ],
+  },
+  colorado: {
+    title: "Colorado River below the Dolores", short: "the Colorado below the Dolores", role: "co",
+    note: "The Green River joins between Potash and Gypsum Canyon, so flows rise sharply at Gypsum Canyon.", floodTitle: "flood peaks on the Colorado",
+    gauges: [
+      { site: "09180500", name: "Colorado River near Cisco, UT", short: "Colorado near Cisco", role: "co" },
+      { site: "09185600", name: "Colorado River at Potash, UT", short: "Colorado at Potash", role: "co" },
+      { site: "09328960", name: "Colorado River at Gypsum Canyon near Hite, UT", short: "Colorado at Gypsum Canyon", role: "co" },
+      POWELL,
+    ],
+  },
 };
 
 const CONFIG = {
   refreshMinutes: 15,
+  // The tab shown when someone opens the site without a #watershed in the address.
+  defaultTab: "animas",
   // Optional key for the newer USGS Water Data API (raises its rate limits).
   // Get one free at https://api.waterdata.usgs.gov/signup/ and paste it here.
-  apiKey: "",
+  apiKey: "rJLcHJcgJNK8tnmH8wJkN6dqKW8CH6W6KFPfRC7n",
+  // Optional Colorado DWR API key (raises DWR's request limits). Free at https://dwr.state.co.us/Rest/GET/Help/ApiKey
+  dwrApiKey: "",
 };
 
 const PARAM = { discharge: "00060", gage: "00065" };
+
+/* =========================================================
+   FLOOD PEAKS
+   Gauges with floodPeak: true get a comparison of their October 2026 flood peak
+   against every annual peak on record (USGS annual peak file).
+   If the peak file can't be reached, a gauge can carry a hand-entered record:
+   floodPeak: { record: { cfs: 25000, date: "1911-10-05" } }
+   ========================================================= */
+const FLOOD = { label: "October 2026", start: "2026-10-01", end: "2026-10-31" };
+
+// Diversions that send water out of the basin. A station with diversion: "sjc" gets this note and link.
+const DIVERSIONS = {
+  sjc: {
+    text: "Part of the San Juan–Chama Project, which diverts water from the San Juan Basin to the Rio Grande.",
+    link: { href: "https://www.usbr.gov/projects/index.php?id=521", text: "About the project (Reclamation)" },
+  },
+};
 
 /* =========================================================
    DATA: two sources, tried in order.
@@ -448,6 +565,9 @@ async function fetchWaterServicesDaily(sites, startDate) {
     + "&statCd=00003&startDT=" + startDate + "&siteStatus=all";
   return parseWaterServices(await getJson(url, "Water Services daily"), sites);
 }
+
+// Short, readable error text for the banner (e.g. "Water Services returned 503").
+const errText = e => (e && e.message) ? (/Failed to fetch|NetworkError|Load failed/i.test(e.message) ? "network or blocked request" : e.message) : String(e);
 
 async function getJson(url, label) {
   const res = await fetch(url);
@@ -496,7 +616,7 @@ async function fetchOgcCollection(collection, sites, start, extra) {
     }
   }
   const results = await Promise.allSettled(jobs);
-  if (results.every(r => r.status === "rejected")) throw new Error("Water Data API unavailable");
+  if (results.every(r => r.status === "rejected")) throw new Error(errText(results[0] && results[0].reason) || "Water Data API unavailable");
   return out;
 }
 
@@ -541,26 +661,349 @@ function rangeSpec(id) {
 }
 const isoDate = d => d3.timeFormat("%Y-%m-%d")(d);
 
-const state = { ws: WATERSHEDS[0].id, measure: "discharge", range: "week", iv: null, ivHours: 0, dv: null, updated: null, loading: false };
+/* Reservoir pool elevations. Each reservoir lists its sources in order; the first that works is used.
+   - usace: U.S. Army Corps of Engineers CWMS Data API (the data behind water.usace.army.mil).
+            The page finds the reservoir's elevation series in the USACE catalog automatically,
+            or you can pin one with tsName, e.g. "Navajo.Elev.Inst.1Hour.0.Ccp-Rev".
+   - bor:   Bureau of Reclamation Upper Colorado reservoir data (one value per day). hdb is the site ID.
+   - usgs:  a USGS reservoir site, using its lake elevation series. */
+const CWMS = "https://cwms-data.usace.army.mil/cwms-data";
+const CWMS_HEADERS = { Accept: "application/json;version=2" };
+const BOR_URL = id => `https://www.usbr.gov/uc/water/hydrodata/reservoir_data/${id}/csv/49.csv`;
+const borPage = id => `https://www.usbr.gov/uc/water/hydrodata/reservoir_data/${id}/dashboard.html`;
+const parseDay = d3.timeParse("%Y-%m-%d");
+const SOURCE_LABEL = { usace: "USACE", bor: "Reclamation", usgs: "USGS", "usgs-new": "USGS", dwr: "Colorado DWR" };
+// What a reservoir reports: pool elevation in feet (default), or storage in acre-feet (measure: "storage").
+const RES_METRIC = {
+  elevation: { label: "Pool elevation", short: "pool", unit: "ft", fmt: v => d3.format(",.1f")(v), axis: d3.format(",.0f") },
+  storage:   { label: "Storage",        short: "storage", unit: "ac-ft", fmt: v => d3.format(",.0f")(v), axis: d3.format(",.0f") },
+};
+const resMetric = g => RES_METRIC[g.measure] || RES_METRIC.elevation;
+// Tributary branch members: tributary gauges, and reservoirs that sit on a tributary (branch: true).
+const onBranch = g => g.role === "trib" || (g.role === "res" && g.branch);
+
+async function fetchUsace(src, start) {
+  let name = src.tsName;
+  if (!name) {
+    const catUrl = `${CWMS}/catalog/TIMESERIES?office=${src.office}&page-size=200&like=${encodeURIComponent("^" + src.location + "\\.Elev.*")}`;
+    const cat = await fetch(catUrl, { headers: CWMS_HEADERS }).then(r => { if (!r.ok) throw new Error("USACE catalog " + r.status); return r.json(); });
+    const names = (cat.entries || []).map(e => e.name).filter(Boolean);
+    // Prefer an instantaneous, revised series; otherwise any elevation series.
+    name = names.find(n => /\.Inst\./i.test(n) && /rev/i.test(n)) || names.find(n => /\.Inst\./i.test(n)) || names[0];
+    if (!name) throw new Error("No USACE elevation series found for " + src.location);
+    src.tsName = name; // remember for the next refresh
+  }
+  const url = `${CWMS}/timeseries?office=${src.office}&unit=EN&page-size=500000`
+    + `&name=${encodeURIComponent(name)}&begin=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(new Date().toISOString())}`;
+  const json = await fetch(url, { headers: CWMS_HEADERS }).then(r => { if (!r.ok) throw new Error("USACE timeseries " + r.status); return r.json(); });
+  return (json.values || [])
+    .map(v => ({ t: new Date(v[0]), v: v[1] == null ? NaN : Number(v[1]) }))
+    .filter(p => Number.isFinite(p.v) && p.v > 0 && !isNaN(p.t))
+    .sort((a, b) => a.t - b.t);
+}
+
+async function fetchBor(src) {
+  const res = await fetch(BOR_URL(src.hdb));
+  if (!res.ok) throw new Error("Reclamation returned " + res.status);
+  return d3.csvParseRows(await res.text())
+    .map(r => ({ t: parseDay(String(r[0] || "").slice(0, 10)), v: Number(r[1]) }))
+    .filter(p => p.t && Number.isFinite(p.v) && p.v > 0)
+    .sort((a, b) => a.t - b.t);
+}
+
+// USGS lake elevation. Reservoir sites don't share one standard code (62614, 62615 and 00062 are all used),
+// so the page asks for every series at the site and keeps the one described as an elevation.
+// Recent readings come first when the range is 30 days or less, then daily values.
+async function fetchUsgsLake(src, start) {
+  const recent = (Date.now() - +start) <= 31 * 86400e3;
+  if (recent) {
+    try {
+      const days = Math.max(1, Math.ceil((Date.now() - +start) / 86400e3));
+      const iv = parseLake(await getJson("https://waterservices.usgs.gov/nwis/iv/?format=json&sites=" + src.site
+        + "&period=P" + days + "D&siteStatus=all", "USGS lake"));
+      if (iv.length > 1) return Object.assign(iv, { daily: false });
+    } catch (e) { console.warn(e); }
+  }
+  const dv = parseLake(await getJson("https://waterservices.usgs.gov/nwis/dv/?format=json&sites=" + src.site
+    + "&startDT=" + isoDate(start) + "&siteStatus=all", "USGS lake daily"));
+  return Object.assign(dv, { daily: true });
+}
+
+function parseLake(json) {
+  const all = ((json.value && json.value.timeSeries) || []).map(ts => {
+    const v = ts.variable || {};
+    const desc = [v.variableName, v.variableDescription].join(" ");
+    const code = ((v.variableCode || [])[0] || {}).value || "";
+    const vals = ((ts.values || [])[0] || {}).value || [];
+    // Rank elevation series: known lake-elevation codes first, then anything described as an elevation.
+    const rank = /^(62614|62615|00062)$/.test(code) ? 2 : /elevation|surface/i.test(desc) && !/storage|contents/i.test(desc) ? 1 : 0;
+    return { ts, vals, rank };
+  }).filter(s => s.rank > 0 && s.vals.length);
+  const best = all.sort((a, b) => b.rank - a.rank || b.vals.length - a.vals.length)[0];
+  if (!best) return [];
+  const noData = Number(best.ts.variable.noDataValue);
+  return best.vals.map(p => ({ t: new Date(p.dateTime), v: Number(p.value) }))
+    .filter(p => Number.isFinite(p.v) && p.v !== noData && p.v > 0 && !isNaN(p.t))
+    .sort((a, b) => a.t - b.t);
+}
+
+// The newer USGS Water Data API (the system behind waterdata.usgs.gov pages). Some sites, especially
+// reservoirs, are only fully available here. Asks for every series at the site and keeps elevation codes.
+async function fetchUsgsNewLake(src, start) {
+  const codes = ["62614", "62615", "00062", "72275"];
+  const recent = (Date.now() - +start) <= 31 * 86400e3;
+  for (const collection of recent ? ["continuous", "daily"] : ["daily", "continuous"]) {
+    let url = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/" + collection + "/items?f=json&limit=10000"
+      + "&monitoring_location_id=USGS-" + src.site
+      + "&time=" + encodeURIComponent((collection === "daily" ? isoDate(start) : start.toISOString()) + "/..");
+    if (CONFIG.apiKey) url += "&api_key=" + encodeURIComponent(CONFIG.apiKey);
+    try {
+      const json = await getJson(url, "USGS Water Data API");
+      const byCode = d3.group((json.features || []).map(f => f.properties || {}), p => String(p.parameter_code || ""));
+      const code = codes.find(c => byCode.has(c));
+      if (!code) continue;
+      const pts = byCode.get(code).map(p => ({ t: new Date(p.time), v: Number(p.value) }))
+        .filter(p => Number.isFinite(p.v) && p.v > 0 && !isNaN(p.t)).sort((a, b) => a.t - b.t);
+      if (pts.length > 1) return Object.assign(pts, { daily: collection === "daily" });
+    } catch (e) { console.warn(e); }
+  }
+  return [];
+}
+
+async function fetchDwrReservoir(src, start) {
+  const recent = (Date.now() - +start) <= 31 * 86400e3;
+  const params = src.params || [src.param];
+  for (const param of params) {
+    if (recent) {
+      try {
+        const raw = await fetchDwrSeries(src.abbrev, param, start, false);
+        if (raw.length > 1) { src.params = [param]; return Object.assign(raw, { daily: false }); }
+      } catch (e) { console.warn(e); }
+    }
+    try {
+      const day = await fetchDwrSeries(src.abbrev, param, start, true);
+      if (day.length) { src.params = [param]; return Object.assign(day, { daily: true }); }
+    } catch (e) { console.warn(e); }
+  }
+  return [];
+}
+
+// Latest storage for a percent-full figure (recent readings first, then daily values).
+async function fetchDwrLatest(abbrev, param) {
+  const start = new Date(Date.now() - 14 * 86400e3);
+  let s = [];
+  try { s = await fetchDwrSeries(abbrev, param, start, false); } catch (e) { console.warn(e); }
+  if (!s.length) { try { s = await fetchDwrSeries(abbrev, param, start, true); } catch (e) { console.warn(e); } }
+  return s.length ? s[s.length - 1] : null;
+}
+
+async function fetchReservoir(g, start, force) {
+  const key = "res|" + g.site + "|" + isoDate(start);
+  const c = cache.get(key);
+  if (!force && c && Date.now() - c.at < CONFIG.refreshMinutes * 60e3) return c.data;
+  for (const src of g.sources || []) {
+    try {
+      const series = src.type === "usace" ? await fetchUsace(src, start)
+        : src.type === "bor" ? await fetchBor(src)
+        : src.type === "usgs-new" ? await fetchUsgsNewLake(src, start)
+        : src.type === "dwr" ? await fetchDwrReservoir(src, start)
+        : await fetchUsgsLake(src, start);
+      if (series.length) {
+        const data = { series, source: src, daily: src.type === "bor" || !!series.daily };
+        if (g.percentFull) data.storage = await fetchDwrLatest(g.percentFull.abbrev, g.percentFull.param).catch(() => null);
+        cache.set(key, { data, at: Date.now() });
+        return data;
+      }
+    } catch (e) { console.warn(g.name, src.type, e); }
+  }
+  throw new Error("No source worked for " + g.name);
+}
+
+async function loadReservoirs(force, start) {
+  const list = allGauges().filter(g => g.role === "res" && (g.sources || []).length);
+  const out = new Map();
+  await Promise.all(list.map(async g => {
+    try { out.set(g.site, await fetchReservoir(g, start, force)); }
+    catch (e) { out.set(g.site, { error: true }); }
+  }));
+  return out;
+}
+
+const hasSources = g => (g.sources || []).length > 0;
+function resLink(g) {
+  const entry = state.res && state.res.get(g.site);
+  if (g.link) return g.link;
+  if (entry && entry.source && entry.source.type === "bor") return { href: borPage(entry.source.hdb), text: "Reclamation" };
+  if (entry && entry.source && entry.source.type === "dwr") return { href: dwrPage(entry.source.abbrev), text: "Colorado DWR" };
+  return null;
+}
+
+function resLatest(g) {
+  const r = state.res && state.res.get(g.site);
+  if (!r || !r.series || !r.series.length) return {};
+  const last = r.series[r.series.length - 1];
+  const daily = !!r.daily;
+  const cap = g.percentFull && g.percentFull.capacity;
+  const storage = r.storage ? r.storage.v : null;
+  const pct = storage != null && cap ? (storage / cap) * 100 : null;
+  return { elev: last.v, at: last.t, daily, below: g.fullPool ? g.fullPool - last.v : null, storage, pct, cap };
+}
+
+const DEFAULT_WS = (WATERSHEDS.find(w => w.id === CONFIG.defaultTab) || WATERSHEDS[0]).id;
+const state = { ws: DEFAULT_WS, measure: "discharge", range: "week", iv: null, ivHours: 0, dv: null, res: null, updated: null, loading: false };
 const cache = new Map(); // "watershed|kind|arg" -> { data, at }
 let loadToken = 0;
 
-const currentWs = () => WATERSHEDS.find(w => w.id === state.ws) || WATERSHEDS[0];
+const currentWs = () => WATERSHEDS.find(w => w.id === state.ws) || WATERSHEDS.find(w => w.id === DEFAULT_WS);
 const ownGauges = () => currentWs().gauges;
-const sharedGauges = () => (currentWs().shared ? SHARED.gauges : []);
+const sharedGroup = () => { const s = currentWs().shared; return s === true ? SHARED_GROUPS.sanjuan : (SHARED_GROUPS[s] || null); };
+const sharedGauges = () => (sharedGroup() ? sharedGroup().gauges : []);
 const allGauges = () => [...ownGauges(), ...sharedGauges()];
+
+/* =========================================================
+   COLORADO DWR (Division of Water Resources) telemetry stations.
+   A gauge with agency: "dwr" uses its DWR station abbreviation as its site.
+   DWR reports times in Colorado (Mountain) time; they're converted here.
+   ========================================================= */
+const DWR = "https://dwr.state.co.us/Rest/GET/api/v2/telemetrystations";
+const DWR_PARAM = { discharge: "DISCHRG", gage: "GAGE_HT" };
+const dwrPage = abbrev => "https://dwr.state.co.us/tools/Stations/" + abbrev;
+
+function denverOffsetMin(d) {
+  try {
+    const tz = new Intl.DateTimeFormat("en-US", { timeZone: "America/Denver", timeZoneName: "shortOffset" })
+      .formatToParts(d).find(p => p.type === "timeZoneName").value; // e.g. "GMT-7"
+    const m = tz.match(/GMT([+-]\d+)(?::(\d+))?/);
+    return m ? Number(m[1]) * 60 + Math.sign(Number(m[1])) * Number(m[2] || 0) : -420;
+  } catch (e) { return -420; }
+}
+function parseDenver(s) {
+  const m = String(s || "").match(/(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+  if (!m) return new Date(NaN);
+  const guess = Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0));
+  return new Date(guess - denverOffsetMin(new Date(guess)) * 60000);
+}
+function formatDenver(d) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Denver", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(d).map(x => [x.type, x.value]));
+  return `${p.month}/${p.day}/${p.year} ${p.hour}:${p.minute}`;
+}
+
+async function fetchDwrSeries(abbrev, param, start, daily) {
+  const ep = daily ? "telemetrytimeseriesday" : "telemetrytimeseriesraw";
+  let url = `${DWR}/${ep}/?format=json&pageSize=50000&abbrev=${encodeURIComponent(abbrev)}`
+    + `&parameter=${param}&startDate=${encodeURIComponent(formatDenver(new Date(+start - 86400e3)))}`;
+  if (CONFIG.dwrApiKey) url += "&apiKey=" + encodeURIComponent(CONFIG.dwrApiKey);
+  const json = await getJson(url, "Colorado DWR");
+  return (json.ResultList || [])
+    .map(r => ({ t: parseDenver(r.measDateTime || r.measDate), v: Number(r.measValue) }))
+    .filter(p => Number.isFinite(p.v) && !isNaN(p.t) && +p.t >= +start)
+    .sort((a, b) => a.t - b.t);
+}
+
+async function addDwr(data, gauges, start, daily) {
+  await Promise.all(gauges.map(async g => {
+    const entry = { discharge: [], gage: [] };
+    // A station can override DWR's parameter names, e.g. dwrParams: { discharge: "DISCHRG2" }.
+    const params = Object.assign({}, DWR_PARAM, g.dwrParams || {});
+    await Promise.all(Object.entries(params).map(async ([key, param]) => {
+      try { entry[key] = await fetchDwrSeries(g.site, param, start, daily); }
+      catch (e) { console.warn("DWR", g.site, param, e); }
+    }));
+    data.set(g.site, entry);
+  }));
+}
+
+// Highest discharge in the flood window, from recent readings (older service, then newer API).
+// Highest discharge and gage height in the flood window, from recent readings
+// (older service, then newer API for whichever measure is still missing).
+async function fetchFloodPeak(site) {
+  const out = { discharge: [], gage: [] };
+  try {
+    const url = "https://waterservices.usgs.gov/nwis/iv/?format=json&sites=" + site + "&parameterCd=" + PARAM.discharge + "," + PARAM.gage
+      + "&startDT=" + FLOOD.start + "&endDT=" + FLOOD.end + "&siteStatus=all";
+    const d = parseWaterServices(await getJson(url, "Water Services"), [site]).get(site);
+    out.discharge = d.discharge; out.gage = d.gage;
+  } catch (e) { console.warn(e); }
+  for (const [key, code] of Object.entries(PARAM)) {
+    if (out[key].length) continue;
+    try {
+      let url = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/continuous/items?f=json&limit=10000"
+        + "&monitoring_location_id=USGS-" + site + "&parameter_code=" + code
+        + "&time=" + encodeURIComponent(FLOOD.start + "T00:00:00Z/" + FLOOD.end + "T23:59:59Z");
+      if (CONFIG.apiKey) url += "&api_key=" + encodeURIComponent(CONFIG.apiKey);
+      out[key] = await fetchOgcPages(url);
+    } catch (e) { console.warn(e); }
+  }
+  const max = pts => pts.length ? pts.reduce((a, b) => (b.v > a.v ? b : a)) : null;
+  return { discharge: max(out.discharge), gage: max(out.gage) };
+}
+
+// USGS annual peak file (tab-separated "rdb" text): one row per water year's peak,
+// with peak discharge (peak_va) and, where recorded, peak gage height (gage_ht).
+async function fetchAnnualPeaks(site) {
+  const url = "https://nwis.waterdata.usgs.gov/nwis/peak?site_no=" + site + "&agency_cd=USGS&format=rdb";
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Peak file returned " + res.status);
+  const lines = (await res.text()).split("\n").filter(l => l && !l.startsWith("#"));
+  const head = lines[0].split("\t");
+  const iDate = head.indexOf("peak_dt"), iVal = head.indexOf("peak_va"), iHt = head.indexOf("gage_ht");
+  return lines.slice(2).map(l => l.split("\t")).map(c => {
+    const ds = c[iDate] || "";
+    const [y, m, d] = ds.split("-").map(Number);
+    const q = Number(c[iVal]), h = iHt >= 0 && c[iHt] !== "" ? Number(c[iHt]) : NaN;
+    return { dateStr: ds, year: y, month: m || 0, day: d || 0, discharge: q, gage: h };
+  }).filter(p => p.year && p.dateStr < FLOOD.start && (Number.isFinite(p.discharge) || Number.isFinite(p.gage)));
+}
+
+async function fetchDwrFloodPeak(g) {
+  const start = new Date(FLOOD.start + "T00:00:00"), end = +new Date(FLOOD.end + "T23:59:59");
+  const params = Object.assign({}, DWR_PARAM, g.dwrParams || {});
+  const out = {};
+  for (const [key, param] of Object.entries(params)) {
+    try {
+      const pts = (await fetchDwrSeries(g.site, param, start, false)).filter(p => +p.t <= end);
+      out[key] = pts.length ? pts.reduce((a, b) => (b.v > a.v ? b : a)) : null;
+    } catch (e) { console.warn(e); out[key] = null; }
+  }
+  return out;
+}
+
+async function loadFlood(force) {
+  const list = allGauges().filter(g => g.floodPeak);
+  const out = new Map();
+  await Promise.all(list.map(async g => {
+    const key = "flood|" + g.site;
+    const c = cache.get(key);
+    if (!force && c) { out.set(g.site, c.data); return; }
+    const entry = {};
+    // A DWR station takes its October peak from DWR and its annual peaks from a named USGS gauge (floodPeak.records).
+    const recordsSite = (typeof g.floodPeak === "object" && g.floodPeak.records) || (g.agency !== "dwr" ? g.site : null);
+    try { entry.peak = g.agency === "dwr" ? await fetchDwrFloodPeak(g) : await fetchFloodPeak(g.site); } catch (e) { console.warn(e); }
+    if (recordsSite) {
+      try { entry.annual = await fetchAnnualPeaks(recordsSite); } catch (e) { console.warn(e); entry.annual = null; }
+    }
+    cache.set(key, { data: entry, at: Date.now() });
+    out.set(g.site, entry);
+  }));
+  return out;
+}
 
 async function getData(kind, ws, arg, force) {
   const key = [ws, kind, arg].join("|");
   const c = cache.get(key);
   if (!force && c && Date.now() - c.at < CONFIG.refreshMinutes * 60e3) return c;
-  const sites = allGauges().map(g => g.site);
+  const sites = allGauges().filter(g => g.role !== "res" && g.agency !== "dwr").map(g => g.site);
   let data;
   try { data = kind === "iv" ? await fetchWaterServices(sites, arg) : await fetchWaterServicesDaily(sites, arg); }
   catch (e1) {
     console.warn(e1);
-    data = kind === "iv" ? await fetchOgc(sites, arg) : await fetchOgcDaily(sites, arg);
+    try { data = kind === "iv" ? await fetchOgc(sites, arg) : await fetchOgcDaily(sites, arg); }
+    catch (e2) { throw new Error(errText(e1) + "; " + errText(e2)); }
   }
+  const dwrStart = kind === "iv" ? new Date(Date.now() - arg * 3600e3) : new Date(arg + "T00:00:00");
+  await addDwr(data, allGauges().filter(g => g.agency === "dwr"), dwrStart, kind !== "iv");
   const entry = { data, at: Date.now() };
   cache.set(key, entry);
   return entry;
@@ -576,16 +1019,23 @@ async function refresh({ force = false } = {}) {
   state.loading = true;
   setStatus("loading", "Loading readings from USGS");
   render();
-  let iv = null, dv = null, failed = false;
-  try { iv = await getData("iv", ws, ivHours, force); } catch (e) { console.warn(e); failed = true; }
+  let iv = null, dv = null, failed = false, why = "";
+  const resJob = loadReservoirs(force, spec.start);
+  const floodJob = loadFlood(false);
+  try { iv = await getData("iv", ws, ivHours, force); } catch (e) { console.warn(e); failed = true; why = errText(e); }
   if (spec.daily) {
-    try { dv = await getData("dv", ws, isoDate(spec.start), force); } catch (e) { console.warn(e); failed = true; }
+    try { dv = await getData("dv", ws, isoDate(spec.start), force); } catch (e) { console.warn(e); failed = true; why = why || ("daily values: " + errText(e)); }
   }
   if (token !== loadToken) return; // the reader switched tabs or ranges while this was loading
   state.loading = false;
   if (iv) Object.assign(state, { iv: iv.data, ivHours, updated: new Date(iv.at) });
   state.dv = dv ? dv.data : null;
+  state.res = await resJob;
+  state.flood = await floodJob;
+  if (token !== loadToken) return;
   document.getElementById("banner").hidden = !failed;
+  document.getElementById("banner-text").textContent = "Couldn’t reach USGS. The page will try again automatically."
+    + (why ? " Details: " + why + "." : "");
   if (iv && !failed) setStatus("live", "Updated " + fClock(state.updated));
   else setStatus("error", state.iv ? "Showing readings from " + fClock(state.updated) : "No readings yet");
   render();
@@ -605,8 +1055,11 @@ const fFtAxis = d3.format(".1f");
 const fClock = d3.timeFormat("%H:%M");
 const fFull = d3.timeFormat("%b %-d, %H:%M");
 const fSigned = v => (v > 0 ? "+" : v < 0 ? "−" : "±") + fCfs(Math.abs(v));
-const colorFor = role => role === "trib" ? "var(--iron)" : role === "sj" ? "var(--sanjuan)" : "var(--water)";
-const classFor = role => role === "trib" ? "trib" : role === "sj" ? "sj" : "";
+const colorFor = role => role === "trib" ? "var(--iron)" : role === "sj" ? "var(--sanjuan)" : role === "co" ? "var(--colorado)" : role === "res" ? "var(--res)" : "var(--water)";
+const classFor = role => role === "trib" ? "trib" : role === "sj" ? "sj" : role === "co" ? "co" : role === "res" ? "res" : "";
+const fElev = d3.format(",.1f");
+const gaugePage = g => g.agency === "dwr" ? dwrPage(g.site) : `https://waterdata.usgs.gov/monitoring-location/USGS-${g.site}/`;
+const fDate = d3.timeFormat("%b %-d, %Y");
 
 function latestFor(site) {
   const d = state.iv && state.iv.get(site);
@@ -630,6 +1083,7 @@ function latestFor(site) {
 function render() {
   drawTabs();
   drawHeader();
+  drawFlood();
   drawSpine();
   drawGrid();
   drawTable();
@@ -654,11 +1108,155 @@ function drawHeader() {
   const w = currentWs();
   document.getElementById("ws-title").textContent = w.title;
   document.getElementById("ws-blurb").textContent = w.blurb;
-  const n = w.gauges.length;
+  const n = w.gauges.filter(g => g.role !== "res").length;
+  const grp = sharedGroup();
+  const ns = grp ? grp.gauges.filter(g => g.role !== "res").length : 0;
+  const nr = allGauges().filter(g => g.role === "res").length;
   document.getElementById("ws-count").textContent = n + (n === 1 ? " gauge" : " gauges")
-    + (w.shared ? ", plus " + SHARED.gauges.length + " on the San Juan below Navajo Lake" : "");
-  document.getElementById("legend-sj").hidden = !w.shared;
+    + (grp ? ", plus " + ns + " on " + grp.short : "")
+    + (nr ? " and " + nr + (nr === 1 ? " reservoir" : " reservoirs") : "");
+  const lg = document.getElementById("legend-sj");
+  lg.hidden = !grp;
+  if (grp) { lg.textContent = grp.title; lg.className = classFor(grp.role); }
+  document.getElementById("legend-res").hidden = !allGauges().some(g => g.role === "res");
   document.title = w.name + " | SW Colorado Stream Gauges";
+}
+
+// Top panel: this watershed's own flood gauges. Shared San Juan flood gauges are drawn
+// inside the gauge grid, between the watershed's cards and the San Juan cards (see drawGrid).
+function drawFlood() {
+  const section = document.getElementById("flood-section");
+  const host = document.getElementById("flood");
+  const list = ownGauges().filter(g => g.floodPeak);
+  section.hidden = !list.length;
+  host.replaceChildren();
+  if (list.length) { host.append(floodToggle()); renderFloodItems(host, list); }
+}
+
+// Discharge / Gage height toggle shared by every flood panel.
+function floodToggle() {
+  const seg = document.createElement("div"); seg.className = "seg flood-toggle"; seg.setAttribute("role", "group"); seg.setAttribute("aria-label", "Flood peak measure");
+  for (const [key, label] of [["discharge", "Discharge (cfs)"], ["gage", "Gage height (ft)"]]) {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = label;
+    b.setAttribute("aria-pressed", String((state.floodMeasure || "discharge") === key));
+    b.addEventListener("click", () => { state.floodMeasure = key; drawFlood(); drawGrid(); });
+    seg.append(b);
+  }
+  return seg;
+}
+
+function renderFloodItems(host, list) {
+  const fDay = d3.timeFormat("%b %-d, %H:%M");
+  const fRecDate = p => p.month && p.day ? d3.timeFormat("%b %-d, %Y")(new Date(p.year, p.month - 1, p.day)) : String(p.year);
+  const key = state.floodMeasure || "discharge";
+  const isQ = key === "discharge";
+  const unit = isQ ? "cfs" : "ft";
+  const fV = isQ ? fCfs : fFt;
+  const what = isQ ? "peak discharge" : "peak gage height";
+
+  for (const g of list) {
+    const item = document.createElement("div"); item.className = "flood-item";
+    const head = document.createElement("div"); head.className = "flood-head";
+    const nm = document.createElement("div"); nm.className = "flood-name"; nm.textContent = g.short;
+    head.append(nm);
+    item.append(head);
+    host.append(item);
+
+    const entry = state.flood && state.flood.get(g.site);
+    const msg = text => { const p = document.createElement("p"); p.className = "flood-summary"; p.textContent = text; item.append(p); };
+    if (!entry) { const sk = document.createElement("div"); sk.className = "gauge-chart skeleton"; sk.style.height = "80px"; item.append(sk); continue; }
+
+    const peak = entry.peak && entry.peak[key];
+    // Annual peaks for this measure; a hand-entered discharge record stands in if the peak file can't be reached.
+    let annual = (entry.annual || []).map(p => ({ ...p, v: p[key] })).filter(p => Number.isFinite(p.v) && p.v > 0);
+    const manual = isQ && typeof g.floodPeak === "object" && g.floodPeak.record;
+    if (!annual.length && manual) {
+      const [y, m, d] = manual.date.split("-").map(Number);
+      annual = [{ year: y, month: m, day: d, v: manual.cfs }];
+    }
+    const record = annual.length ? annual.reduce((a, b) => (b.v > a.v ? b : a)) : null;
+
+    if (peak) {
+      const big = document.createElement("div"); big.className = "flood-big";
+      big.textContent = fV(peak.v); const s = document.createElement("small"); s.textContent = unit + ", " + FLOOD.label + " peak"; big.append(s);
+      head.append(big);
+    }
+
+    const parts = [];
+    if (peak) parts.push(`Provisional ${what} of ${fV(peak.v)} ${unit} on ${fDay(peak.t)}.`);
+    else parts.push(`No ${FLOOD.label} ${isQ ? "discharge" : "gage height"} readings were found for this gauge.`);
+    if (peak && record) {
+      if (isQ) {
+        const pct = (peak.v / record.v) * 100;
+        parts.push(pct >= 100
+          ? `That exceeds the previous record of ${fCfs(record.v)} cfs (${fRecDate(record)}).`
+          : `That is ${d3.format(".0f")(pct)}% of the record peak of ${fCfs(record.v)} cfs (${fRecDate(record)}).`);
+      } else {
+        const diff = peak.v - record.v;
+        parts.push(diff >= 0
+          ? `That is ${fFt(diff)} ft above the previous record peak stage of ${fFt(record.v)} ft (${fRecDate(record)}).`
+          : `That is ${fFt(-diff)} ft below the record peak stage of ${fFt(record.v)} ft (${fRecDate(record)}).`);
+      }
+      if (annual.length > 1) {
+        const rank = annual.filter(p => p.v > peak.v).length + 1;
+        const yrs = d3.extent(annual, p => p.year);
+        parts.push(`It would rank #${rank} of ${annual.length + 1} annual peaks on record (${yrs[0]}–2026).`);
+      }
+      if (typeof g.floodPeak === "object" && g.floodPeak.recordsLabel) parts.push(`Annual peaks are from ${g.floodPeak.recordsLabel}.`);
+      if (!isQ) parts.push("Gage datums can change over time, so older stage peaks may not compare exactly.");
+    } else if (peak) {
+      parts.push(`No record ${isQ ? "peak discharge" : "peak stage"} could be loaded for comparison.`);
+    }
+    msg(parts.join(" "));
+
+    if (!peak && !record) continue;
+    const box = document.createElement("div"); box.className = "flood-chart"; item.append(box);
+    const W = Math.max(260, box.clientWidth || 600), H = 96;
+    const m = { l: 8, r: 8, t: 30, b: 22 };
+    const vals = [...annual.map(p => p.v), peak ? peak.v : NaN].filter(Number.isFinite);
+    const lo = isQ ? 0 : d3.min(vals) - 1;
+    const x = d3.scaleLinear([lo, d3.max(vals) * (isQ ? 1.04 : 1) + (isQ ? 0 : 1)], [m.l, W - m.r]).nice();
+    const svg = d3.select(box).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%").attr("height", H)
+      .attr("role", "img").attr("aria-label", "Annual " + what + "s on record, with the " + FLOOD.label + " peak highlighted");
+    const yMid = m.t + (H - m.t - m.b) / 2;
+    svg.append("line").attr("class", "gridline").attr("x1", m.l).attr("x2", W - m.r).attr("y1", yMid).attr("y2", yMid);
+    const ticks = x.ticks(W < 420 ? 3 : 5);
+    svg.append("g").selectAll("text").data(ticks).join("text").attr("class", "tick")
+      .attr("x", v => x(v)).attr("y", H - 4).attr("text-anchor", "middle").text(v => isQ ? fCfs(v) : d3.format(",.0f")(v));
+
+    const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; box.append(tip);
+    const showTip = (ev, title, line) => {
+      tip.replaceChildren();
+      const a = document.createElement("div"); a.className = "t"; a.textContent = title;
+      const b = document.createElement("div"); b.textContent = line;
+      tip.append(a, b); tip.hidden = false;
+      const [bx, by] = d3.pointer(ev, box);
+      tip.style.left = Math.max(0, Math.min(box.clientWidth - tip.offsetWidth, bx + 12)) + "px";
+      tip.style.top = Math.max(-8, by - tip.offsetHeight - 10) + "px";
+    };
+    const anchor = px => px > W * 0.8 ? "end" : px < W * 0.2 ? "start" : "middle";
+    annual.forEach((p, i) => {
+      const isRec = record && p === record;
+      svg.append("circle").attr("cx", x(p.v)).attr("cy", yMid + ((i % 3) - 1) * 6).attr("r", isRec ? 5 : 3.5)
+        .attr("fill", "var(--water)").attr("fill-opacity", isRec ? 0.9 : 0.35)
+        .on("pointerenter pointermove", ev => showTip(ev, fRecDate(p), fV(p.v) + " " + unit + " annual peak"))
+        .on("pointerleave", () => { tip.hidden = true; });
+    });
+    if (record) {
+      svg.append("text").attr("class", "flood-label muted").attr("x", Math.min(W - m.r, Math.max(m.l, x(record.v))))
+        .attr("y", yMid + 22).attr("text-anchor", anchor(x(record.v)))
+        .text("Record " + fV(record.v) + " " + unit + " (" + record.year + ")");
+    }
+    if (peak) {
+      svg.append("circle").attr("cx", x(peak.v)).attr("cy", yMid).attr("r", 7)
+        .attr("fill", "var(--iron)").attr("stroke", "var(--panel)").attr("stroke-width", 2)
+        .on("pointerenter pointermove", ev => showTip(ev, fDay(peak.t), fV(peak.v) + " " + unit + ", " + FLOOD.label + " (provisional)"))
+        .on("pointerleave", () => { tip.hidden = true; });
+      svg.append("text").attr("class", "flood-label").attr("x", Math.min(W - m.r, Math.max(m.l, x(peak.v))))
+        .attr("y", m.t - 12).attr("text-anchor", anchor(x(peak.v)))
+        .text(FLOOD.label + " " + fV(peak.v) + " " + unit);
+    }
+  }
 }
 
 function drawSpine() {
@@ -667,12 +1265,15 @@ function drawSpine() {
   const w = currentWs();
   const rowH = 56, headH = 58, top = 14;
   const own = ownGauges(), shared = sharedGauges();
-  const mainX = 26, tribX = 26 + 44, lx = 90;
+  const mainX = 26, tribX = 26 + 44, subX = tribX + 44;
+  // Branch levels: main stem, tributary, and a tributary of a tributary (joins: "<parent river>").
+  const xFor = g => !onBranch(g) ? mainX : g.joins ? subX : tribX;
+  const lxFor = p => Math.max(90, p.x + 20);
 
   // Lay out rows: own gauges, then (optionally) a group heading, then shared gauges.
   let y = top;
   const pos = [];
-  own.forEach(g => { pos.push({ g, y, group: "own", l: latestFor(g.site), x: g.role === "trib" ? tribX : mainX }); y += rowH; });
+  own.forEach(g => { pos.push({ g, y, group: "own", l: latestFor(g.site), x: xFor(g) }); y += rowH; });
   let headY = null;
   if (shared.length) {
     headY = y - rowH + headH;
@@ -689,23 +1290,32 @@ function drawSpine() {
 
   // Stem segments between consecutive main-stem gauges within each group.
   for (const group of ["own", "shared"]) {
-    const stem = pos.filter(p => p.group === group && p.g.role !== "trib");
+    const stem = pos.filter(p => p.group === group && !onBranch(p.g));
     for (let i = 0; i < stem.length - 1; i++) {
       const a = stem[i], b = stem[i + 1];
       if ((a.g.river || "") !== (b.g.river || "")) continue; // different rivers on one tab
       svg.append("line").attr("x1", mainX).attr("x2", mainX).attr("y1", a.y).attr("y2", b.y)
-        .attr("stroke", group === "shared" ? "var(--sanjuan)" : "var(--water)").attr("stroke-linecap", "round")
-        .attr("stroke-width", a.l.q != null ? width(a.l.q) : 2)
-        .attr("opacity", a.l.q != null ? 0.55 : 0.2);
+        .attr("stroke", group === "shared" ? colorFor(sharedGroup().role) : "var(--water)").attr("stroke-linecap", "round")
+        .attr("stroke-width", (a.l.q ?? b.l.q) != null ? width(a.l.q ?? b.l.q) : 2)
+        .attr("opacity", (a.l.q ?? b.l.q) != null ? 0.55 : 0.2);
     }
   }
-  // Tributaries: consecutive gauges on the same tributary (same "river") share one branch;
-  // the last gauge on a branch elbows into the main stem just below it.
+  // Tributaries: gauges on the same tributary (same "river") share one branch. A branch runs past any
+  // smaller tributaries that join it (joins: "<river>"), then its last gauge elbows into its parent:
+  // the main stem, or for a tributary of a tributary, the parent branch.
   pos.forEach((p, i) => {
-    if (p.g.role !== "trib") return;
-    const next = pos[i + 1];
-    const sameBranch = next && next.g.role === "trib" && p.g.river && next.g.river === p.g.river;
-    const d = sameBranch ? `M${p.x},${p.y} V${next.y}` : `M${p.x},${p.y} V${p.y + rowH * 0.55} H${mainX}`;
+    if (!onBranch(p.g)) return;
+    const r = p.g.river;
+    let nextSame = null, lastChildY = null;
+    for (let j = i + 1; j < pos.length && pos[j].group === p.group; j++) {
+      const q = pos[j];
+      if (r && onBranch(q.g) && q.g.river === r) { nextSame = q; break; }
+      if (r && q.g.joins === r) { lastChildY = q.y; continue; }
+      break;
+    }
+    const parentX = p.g.joins ? tribX : mainX;
+    const endY = lastChildY != null ? lastChildY + rowH * 0.85 : p.y + rowH * 0.55;
+    const d = nextSame ? `M${p.x},${p.y} V${nextSame.y}` : `M${p.x},${p.y} V${endY} H${parentX}`;
     svg.append("path").attr("d", d)
       .attr("fill", "none").attr("stroke", "var(--iron)").attr("stroke-linejoin", "round").attr("stroke-linecap", "round")
       .attr("stroke-width", p.l.q != null ? width(p.l.q) : 2)
@@ -715,21 +1325,35 @@ function drawSpine() {
   if (headY != null) {
     svg.append("line").attr("x1", 0).attr("x2", W).attr("y1", headY - 22).attr("y2", headY - 22)
       .attr("stroke", "var(--line)").attr("stroke-dasharray", "4 4");
-    svg.append("text").attr("class", "group-label").attr("x", 0).attr("y", headY).text(SHARED.title);
+    svg.append("text").attr("class", "group-label").attr("x", 0).attr("y", headY).style("fill", colorFor(sharedGroup().role)).text(sharedGroup().title);
     svg.append("text").attr("class", "group-note").attr("x", 0).attr("y", headY + 18).text(w.joinNote || "");
   }
   // Nodes and labels
   for (const p of pos) {
     const color = colorFor(p.g.role);
     const node = svg.append("g").attr("class", "node").attr("tabindex", 0).attr("role", "button")
-      .attr("aria-label", `${p.g.short}: ${p.l.q != null ? fCfs(p.l.q) + " cfs" : "no recent reading"}. Jump to chart.`)
+      .attr("aria-label", p.g.role === "res"
+        ? `${p.g.short}: ${resLatest(p.g).elev != null ? resMetric(p.g).label.toLowerCase() + " " + resMetric(p.g).fmt(resLatest(p.g).elev) + " " + resMetric(p.g).unit : "no recent reading"}. Jump to chart.`
+        : `${p.g.short}: ${p.l.q != null ? fCfs(p.l.q) + " cfs" : "no recent reading"}. Jump to chart.`)
       .on("click", () => jumpTo(p.g.site))
       .on("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); jumpTo(p.g.site); } });
     node.append("circle").attr("class", "halo").attr("cx", p.x).attr("cy", p.y).attr("r", 10).attr("fill", "var(--panel)").attr("stroke", "none");
-    node.append("circle").attr("cx", p.x).attr("cy", p.y).attr("r", 6).attr("fill", color).attr("stroke", "var(--panel)").attr("stroke-width", 2);
-    node.append("text").attr("class", "label-name").attr("x", lx).attr("y", p.y - 1).text(p.g.short);
-    node.append("text").attr("class", "label-val").attr("x", lx).attr("y", p.y + 16)
-      .text(p.l.q != null ? fCfs(p.l.q) + " cfs" : (state.loading && !hasData() ? "Loading" : "No recent reading"));
+    if (p.g.role === "res") {
+      // Reservoirs: a wide basin shape instead of a dot
+      node.append("rect").attr("x", p.x - 12).attr("y", p.y - 7).attr("width", 24).attr("height", 14).attr("rx", 4)
+        .attr("fill", color).attr("stroke", "var(--panel)").attr("stroke-width", 2);
+    } else {
+      node.append("circle").attr("cx", p.x).attr("cy", p.y).attr("r", 6).attr("fill", color).attr("stroke", "var(--panel)").attr("stroke-width", 2);
+    }
+    node.append("text").attr("class", "label-name").attr("x", lxFor(p)).attr("y", p.y - 1).text(p.g.short);
+    let valText;
+    if (p.g.role === "res") {
+      const r = resLatest(p.g);
+      valText = r.elev != null ? resMetric(p.g).fmt(r.elev) + " " + resMetric(p.g).unit + " " + resMetric(p.g).short + (r.pct != null ? ", " + d3.format(".0f")(r.pct) + "% full" : "") : (!hasSources(p.g) ? "Data source needed" : state.loading ? "Loading" : "No recent reading");
+    } else {
+      valText = p.l.q != null ? fCfs(p.l.q) + " cfs" : (state.loading && !hasData() ? "Loading" : "No recent reading");
+    }
+    node.append("text").attr("class", "label-val").attr("x", lxFor(p)).attr("y", p.y + 16).text(valText);
   }
 }
 
@@ -762,6 +1386,7 @@ function drawGrid() {
   document.getElementById("range-note").hidden = !spec.daily;
 
   const addCard = (g) => {
+    if (g.role === "res") return addResCard(g);
     const card = document.createElement("article");
     card.className = ("gauge " + classFor(g.role)).trim();
     card.id = "g-" + g.site;
@@ -772,13 +1397,20 @@ function drawGrid() {
     const left = document.createElement("div");
     const nm = document.createElement("div"); nm.className = "gauge-name"; nm.textContent = g.short;
     const site = document.createElement("div"); site.className = "gauge-site";
-    const a = document.createElement("a"); a.href = `https://waterdata.usgs.gov/monitoring-location/USGS-${g.site}/`;
-    a.rel = "noopener"; a.target = "_blank"; a.textContent = "USGS " + g.site;
+    const a = document.createElement("a"); a.href = gaugePage(g);
+    a.rel = "noopener"; a.target = "_blank"; a.textContent = (g.agency === "dwr" ? "Colorado DWR " : "USGS ") + g.site;
     site.append(a); left.append(nm, site);
     const val = document.createElement("div"); val.className = "gauge-val";
     if (latest != null) { val.textContent = fVal(latest); const s = document.createElement("small"); s.textContent = unit; val.append(s); }
     head.append(left, val);
     card.append(head);
+    if (g.diversion && DIVERSIONS[g.diversion]) {
+      const dv = DIVERSIONS[g.diversion];
+      const note = document.createElement("div"); note.className = "gauge-sub";
+      note.append(document.createTextNode(dv.text + " "));
+      const a2 = document.createElement("a"); a2.href = dv.link.href; a2.rel = "noopener"; a2.target = "_blank"; a2.textContent = dv.link.text;
+      note.append(a2); card.append(note);
+    }
     grid.append(card);
 
     if (!ready) { const sk = document.createElement("div"); sk.className = "gauge-chart skeleton"; card.append(sk); return; }
@@ -793,13 +1425,75 @@ function drawGrid() {
     drawChart(box, series, colorFor(g.role), { fVal, fAxis, fX, fTip, unit, id: g.site });
   };
 
+  const addResCard = (g) => {
+    const card = document.createElement("article");
+    card.className = "gauge res";
+    card.id = "g-" + g.site;
+    const r = resLatest(g);
+    const head = document.createElement("div"); head.className = "gauge-head";
+    const left = document.createElement("div");
+    const nm = document.createElement("div"); nm.className = "gauge-name"; nm.textContent = g.short;
+    const site = document.createElement("div"); site.className = "gauge-site";
+    const entry0 = state.res && state.res.get(g.site);
+    const M = resMetric(g);
+    const srcText = entry0 && entry0.source ? M.label + " from " + SOURCE_LABEL[entry0.source.type] : M.label;
+    const link = resLink(g);
+    if (!hasSources(g)) site.textContent = "Data source needed";
+    else if (link) {
+      site.append(document.createTextNode(srcText + ". "));
+      const a = document.createElement("a"); a.href = link.href; a.rel = "noopener"; a.target = "_blank";
+      a.textContent = link.text; site.append(a);
+    } else site.textContent = srcText;
+    left.append(nm, site);
+    const val = document.createElement("div"); val.className = "gauge-val";
+    if (r.elev != null) { val.textContent = M.fmt(r.elev); const s = document.createElement("small"); s.textContent = M.unit; val.append(s); }
+    head.append(left, val);
+    card.append(head);
+    if (r.elev != null) {
+      const sub = document.createElement("div"); sub.className = "gauge-sub";
+      sub.textContent = (r.pct != null ? d3.format(".0f")(r.pct) + "% full (" + fCfs(r.storage) + " of " + fCfs(r.cap) + " ac-ft). "
+          : r.storage != null ? "Storage " + fCfs(r.storage) + " ac-ft. " : "")
+        + (r.below != null ? (r.below >= 0 ? fElev(r.below) + " ft below" : fElev(-r.below) + " ft above") + " full pool (" + d3.format(",")(g.fullPool) + " ft). " : "")
+        + "Latest reading " + (r.daily ? fDate(r.at) : fFull(r.at)) + ".";
+      card.append(sub);
+    }
+    grid.append(card);
+    const entry = state.res && state.res.get(g.site);
+    const msg = (text) => { const e = document.createElement("div"); e.className = "gauge-empty"; e.textContent = text; card.append(e); };
+    if (!hasSources(g)) return msg("Add a data source for this reservoir to show its " + M.label.toLowerCase() + ".");
+    if (!entry) { const sk = document.createElement("div"); sk.className = "gauge-chart skeleton"; card.append(sk); return; }
+    if (entry.error) return msg("Couldn’t load " + M.label.toLowerCase() + " for this reservoir right now.");
+    const series = entry.series.filter(p => +p.t >= +spec.start);
+    const daily = !!entry.daily;
+    if (series.length < 2) return msg(daily ? "This source posts one reading per day. Choose Week or longer to see a trend." : "No " + M.short + " readings in this time range.");
+    const box = document.createElement("div"); box.className = "gauge-chart"; card.append(box);
+    drawChart(box, series, "var(--res)", {
+      fVal: M.fmt, fAxis: M.axis, unit: M.unit, id: g.site,
+      fTip: d => (daily ? fDate(d) : fFull(d)) + ", " + M.label.toLowerCase(),
+      fX: spec.hours <= 24 ? d3.timeFormat("%H:%M") : spec.hours <= 72 ? d3.timeFormat("%a %H:%M")
+        : spec.hours <= 24 * 100 ? d3.timeFormat("%b %-d") : d3.timeFormat("%b %Y"),
+    });
+  };
+
   ownGauges().forEach(addCard);
-  if (w.shared) {
+  const grp = sharedGroup();
+  if (grp) {
     const h = document.createElement("div"); h.className = "group-head";
-    const t = document.createElement("h3"); t.textContent = SHARED.title;
-    const s = document.createElement("span"); s.textContent = (w.joinNote ? w.joinNote + " " : "") + "These gauges appear on every San Juan Basin tab.";
+    const t = document.createElement("h3"); t.textContent = grp.title; t.style.color = colorFor(grp.role);
+    const s = document.createElement("span"); s.textContent = [w.joinNote, grp.note].filter(Boolean).join(" ");
     h.append(t, s); grid.append(h);
-    SHARED.gauges.forEach(addCard);
+    const sjFlood = grp.gauges.filter(g => g.floodPeak);
+    if (sjFlood.length) {
+      const panel = document.createElement("section"); panel.className = "flood flood-in-grid";
+      panel.style.borderLeftColor = colorFor(grp.role);
+      const ht = document.createElement("h2"); ht.textContent = FLOOD.label + " " + grp.floodTitle;
+      const nt = document.createElement("p"); nt.className = "note";
+      nt.textContent = "The highest discharge or gage height recorded during the " + FLOOD.label + " floods, compared with every annual peak on record. " + FLOOD.label + " values are provisional and may be revised by USGS.";
+      const inner = document.createElement("div");
+      panel.append(ht, nt, floodToggle(), inner); grid.append(panel);
+      renderFloodItems(inner, sjFlood);
+    }
+    grp.gauges.forEach(addCard);
   }
 }
 
@@ -869,26 +1563,48 @@ function drawTable() {
   tb.replaceChildren();
   const ready = hasData();
   const addRow = (g) => {
+    if (g.role === "res") return addResRow(g);
     const l = latestFor(g.site);
     const tr = tb.insertRow();
     const name = tr.insertCell();
     const sw = document.createElement("span"); sw.className = ("swatch " + classFor(g.role)).trim();
     name.append(sw, document.createTextNode(g.name));
     const site = tr.insertCell();
-    const a = document.createElement("a"); a.href = `https://waterdata.usgs.gov/monitoring-location/USGS-${g.site}/`;
-    a.rel = "noopener"; a.target = "_blank"; a.textContent = g.site; site.append(a);
+    const a = document.createElement("a"); a.href = gaugePage(g);
+    a.rel = "noopener"; a.target = "_blank"; a.textContent = (g.agency === "dwr" ? "DWR " : "") + g.site; site.append(a);
     const cell = (text, cls) => { const td = tr.insertCell(); td.textContent = text; td.className = cls || ""; };
     cell(l.q != null ? fCfs(l.q) : (ready ? "No data" : "…"), "num");
     cell(l.change != null ? fSigned(l.change) : (ready ? "—" : "…"), "num");
     cell(l.h != null ? fFt(l.h) : (ready ? "—" : "…"), "num hide-narrow");
     cell(l.at ? fFull(l.at) : (ready ? "—" : "…"), "hide-narrow");
   };
+  const addResRow = (g) => {
+    const r = resLatest(g);
+    const tr = tb.insertRow();
+    const name = tr.insertCell();
+    const sw = document.createElement("span"); sw.className = "swatch res";
+    name.append(sw, document.createTextNode(g.name));
+    const site = tr.insertCell();
+    const entry = state.res && state.res.get(g.site);
+    const link = resLink(g);
+    const label = entry && entry.source ? SOURCE_LABEL[entry.source.type] : (link ? link.text : "—");
+    if (link) { const a = document.createElement("a"); a.href = link.href; a.rel = "noopener"; a.target = "_blank"; a.textContent = label; site.append(a); }
+    else site.textContent = label;
+    const info = tr.insertCell(); info.colSpan = 3; info.className = "num";
+    const M = resMetric(g);
+    info.textContent = r.elev != null
+      ? M.label + " " + M.fmt(r.elev) + " " + M.unit + (r.below != null ? (r.below >= 0 ? ", " + fElev(r.below) + " ft below full" : ", " + fElev(-r.below) + " ft above full") : "")
+        + (r.pct != null ? ", " + d3.format(".0f")(r.pct) + "% full" : "")
+      : (!hasSources(g) ? "Data source needed" : state.res ? "No data" : "…");
+    const when = tr.insertCell(); when.className = "hide-narrow"; when.textContent = r.at ? (r.daily ? fDate(r.at) : fFull(r.at)) : (state.res ? "—" : "…");
+  };
   ownGauges().forEach(addRow);
-  if (currentWs().shared) {
+  const grp = sharedGroup();
+  if (grp) {
     const tr = tb.insertRow(); tr.className = "group-row";
-    const th = document.createElement("th"); th.scope = "rowgroup"; th.colSpan = 6; th.textContent = SHARED.title;
+    const th = document.createElement("th"); th.scope = "rowgroup"; th.colSpan = 6; th.textContent = grp.title; th.style.color = colorFor(grp.role);
     tr.append(th);
-    SHARED.gauges.forEach(addRow);
+    grp.gauges.forEach(addRow);
   }
 }
 
@@ -896,11 +1612,11 @@ function drawTable() {
    WATERSHED SELECTION + WEB ADDRESSES (#animas, #dolores, ...)
    ========================================================= */
 function selectWatershed(id, { push = false } = {}) {
-  if (!WATERSHEDS.some(w => w.id === id)) id = WATERSHEDS[0].id;
+  if (!WATERSHEDS.some(w => w.id === id)) id = DEFAULT_WS;
   const changed = id !== state.ws;
   state.ws = id;
   if (push && location.hash.slice(1) !== id) history.pushState(null, "", "#" + id);
-  if (changed) Object.assign(state, { iv: null, ivHours: 0, dv: null });
+  if (changed) Object.assign(state, { iv: null, ivHours: 0, dv: null, res: null, flood: null });
   refresh();
 }
 window.addEventListener("hashchange", () => selectWatershed(location.hash.slice(1)));
@@ -932,7 +1648,7 @@ window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer
 
 syncButtons();
 const startId = location.hash.slice(1);
-state.ws = WATERSHEDS.some(w => w.id === startId) ? startId : WATERSHEDS[0].id;
+state.ws = WATERSHEDS.some(w => w.id === startId) ? startId : DEFAULT_WS;
 render();
 refresh(); // a week of recent readings covers the 24h, 72h and week views in one request
 </script>
