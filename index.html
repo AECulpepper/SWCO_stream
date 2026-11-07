@@ -297,8 +297,8 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
 
     <section aria-labelledby="trends-title">
       <section class="flood" id="flood-section" aria-labelledby="flood-title" hidden>
-        <h2 id="flood-title">October 2026 flood peaks</h2>
-        <p class="note">The highest discharge or gage height recorded during the October 2026 floods, compared with every annual peak on record. October values are provisional and may be revised by USGS.</p>
+        <h2 id="flood-title">Oct–Nov 2026 flood peaks</h2>
+        <p class="note">The highest discharge or gage height recorded between October 1 and November 30, 2026, compared with every annual peak on record. These values are provisional and may be revised.</p>
         <div id="flood"></div>
       </section>
       <h2 id="trends-title">Recent trends</h2>
@@ -526,12 +526,15 @@ const PARAM = { discharge: "00060", gage: "00065" };
 
 /* =========================================================
    FLOOD PEAKS
-   Gauges with floodPeak: true get a comparison of their October 2026 flood peak
+   Gauges with floodPeak: true get a comparison of their highest reading in the flood window (FLOOD below)
    against every annual peak on record (USGS annual peak file).
    If the peak file can't be reached, a gauge can carry a hand-entered record:
    floodPeak: { record: { cfs: 25000, date: "1911-10-05" } }
    ========================================================= */
-const FLOOD = { label: "October 2026", start: "2026-10-01", end: "2026-10-31" };
+// The flood window: the highest reading between start and end (or today, if end hasn't come yet) is the flood peak.
+const FLOOD = { label: "Oct–Nov 2026", start: "2026-10-01", end: "2026-11-30" };
+const floodEndDate = () => { const today = isoDateLocal(new Date()); return today < FLOOD.end ? today : FLOOD.end; };
+function isoDateLocal(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 
 // Diversions that send water out of the basin. A station with diversion: "sjc" gets this note and link.
 const DIVERSIONS = {
@@ -922,7 +925,7 @@ async function fetchFloodPeak(site) {
   const out = { discharge: [], gage: [] };
   try {
     const url = "https://waterservices.usgs.gov/nwis/iv/?format=json&sites=" + site + "&parameterCd=" + PARAM.discharge + "," + PARAM.gage
-      + "&startDT=" + FLOOD.start + "&endDT=" + FLOOD.end + "&siteStatus=all";
+      + "&startDT=" + FLOOD.start + "&endDT=" + floodEndDate() + "&siteStatus=all";
     const d = parseWaterServices(await getJson(url, "Water Services"), [site]).get(site);
     out.discharge = d.discharge; out.gage = d.gage;
   } catch (e) { console.warn(e); }
@@ -931,7 +934,7 @@ async function fetchFloodPeak(site) {
     try {
       let url = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/continuous/items?f=json&limit=10000"
         + "&monitoring_location_id=USGS-" + site + "&parameter_code=" + code
-        + "&time=" + encodeURIComponent(FLOOD.start + "T00:00:00Z/" + FLOOD.end + "T23:59:59Z");
+        + "&time=" + encodeURIComponent(FLOOD.start + "T00:00:00Z/" + floodEndDate() + "T23:59:59Z");
       if (CONFIG.apiKey) url += "&api_key=" + encodeURIComponent(CONFIG.apiKey);
       out[key] = await fetchOgcPages(url);
     } catch (e) { console.warn(e); }
@@ -958,7 +961,7 @@ async function fetchAnnualPeaks(site) {
 }
 
 async function fetchDwrFloodPeak(g) {
-  const start = new Date(FLOOD.start + "T00:00:00"), end = +new Date(FLOOD.end + "T23:59:59");
+  const start = new Date(FLOOD.start + "T00:00:00"), end = +new Date(floodEndDate() + "T23:59:59");
   const params = Object.assign({}, DWR_PARAM, g.dwrParams || {});
   const out = {};
   for (const [key, param] of Object.entries(params)) {
@@ -1488,7 +1491,7 @@ function drawGrid() {
       panel.style.borderLeftColor = colorFor(grp.role);
       const ht = document.createElement("h2"); ht.textContent = FLOOD.label + " " + grp.floodTitle;
       const nt = document.createElement("p"); nt.className = "note";
-      nt.textContent = "The highest discharge or gage height recorded during the " + FLOOD.label + " floods, compared with every annual peak on record. " + FLOOD.label + " values are provisional and may be revised by USGS.";
+      nt.textContent = "The highest discharge or gage height recorded between October 1 and November 30, 2026, compared with every annual peak on record. These values are provisional and may be revised by USGS.";
       const inner = document.createElement("div");
       panel.append(ht, nt, floodToggle(), inner); grid.append(panel);
       renderFloodItems(inner, sjFlood);
