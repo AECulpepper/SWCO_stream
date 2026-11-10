@@ -80,6 +80,7 @@ a:hover { text-decoration-thickness: 2px; }
 .site-head .lede { margin: 0; color: var(--muted); max-width: 60ch; font-size: 1.05rem; }
 .prov { margin: 10px 0 0; font-size: 0.88rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .prov-2 { margin-top: 6px; }
+.prov a { color: var(--spruce); }
 .prov-tag { display: inline-block; font-weight: 600; font-size: 0.78rem; letter-spacing: 0.02em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--line); background: var(--panel); border-radius: var(--r-sm); padding: 2px 8px; }
 .status { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--muted); }
 .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
@@ -231,12 +232,42 @@ footer p { margin: 0 0 6px; }
 .flood-label { font-size: 12px; fill: var(--ink); font-weight: 500; }
 .flood-label.muted { fill: var(--muted); font-weight: 400; }
 
+/* ---------- Gauge detail page (beta) ---------- */
+.detail { display: flex; flex-direction: column; gap: 22px; }
+.d-back { font-weight: 500; text-decoration: none; }
+.d-back:hover { text-decoration: underline; }
+.d-title { font-size: 1.9rem; margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.d-meta { margin: 6px 0 0; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.95rem; }
+.d-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.d-tile { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; }
+.d-tile-label { font-size: 0.82rem; color: var(--muted); }
+.d-tile-val { font-family: var(--font-display); font-weight: 600; font-size: 1.7rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.d-tile-sub { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+.d-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px 18px; }
+.d-h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; margin: 0 0 10px; }
+.d-chart { position: relative; min-height: 320px; }
+.d-chart-short { min-height: 220px; }
+.d-custom { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: -4px 0 12px; font-size: 0.92rem; }
+.d-custom input { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 4px 8px; margin-left: 4px; }
+.d-dl { margin-top: 4px; }
+.d-tile-quiet { color: var(--muted); }
+.d-mini { margin-top: 8px; font-size: 0.82rem; padding: 3px 10px; }
+.wy-chips { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 0 0 10px; }
+.wy-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; border: 1px solid var(--line); border-radius: 999px; padding: 2px 4px 2px 10px; background: var(--bg); }
+.wy-sw { display: inline-block; width: 12px; height: 4px; border-radius: 2px; vertical-align: middle; }
+.wy-x { border: 0; background: transparent; padding: 0 6px; font-size: 1rem; line-height: 1; color: var(--muted); }
+.wy-x:hover { color: var(--ink); }
+.gauge-name a { color: inherit; text-decoration: none; border-bottom: 1px dashed var(--muted); }
+.gauge-name a:hover { border-bottom-style: solid; }
+
 /* ---------- Shared San Juan group ---------- */
 .gauge.sj { border-left-color: var(--sanjuan); }
 .gauge.co { border-left-color: var(--colorado); }
 td .swatch.co { background: var(--colorado); }
 .river .legend .co::before { background: var(--colorado); }
 .gauge.res { border-left-color: var(--res); }
+.qual-tag { display: inline-block; font-size: 0.7rem; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 0 5px; margin-left: 2px; cursor: help; }
+.offline-tag { display: inline-block; vertical-align: 1px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--bad); border: 1px solid var(--bad); border-radius: var(--r-sm); padding: 0 6px; margin-left: 4px; }
 .gauge-sub { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
 .river .legend .res::before { background: var(--res); height: 8px; border-radius: 2px; }
 td .swatch.res { background: var(--res); }
@@ -244,6 +275,7 @@ td .swatch.res { background: var(--res); }
 .group-head h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; color: var(--sanjuan); }
 .group-head span { color: var(--muted); font-size: 0.9rem; }
 .river .legend { flex-wrap: wrap; gap: 6px 16px; }
+.spine-toggle { margin: -6px 0 12px; }
 .river .legend .sj::before { background: var(--sanjuan); }
 .river .group-label { font-size: 14px; font-weight: 600; fill: var(--sanjuan); }
 .river .group-note { font-size: 13px; fill: var(--muted); }
@@ -258,7 +290,9 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
     <div>
       <h1>SW Colorado Stream Gauges</h1>
       <p class="lede">Live readings from USGS gauges across six watersheds of southwest Colorado. This site is in development and bugs should be expected. If you have any feedback, please contact <a href="mailto:anthony@mountainstudies.org">anthony@mountainstudies.org</a>.</p>
-      <p class="prov"><span class="prov-tag">Provisional USGS data</span> Recent readings are provisional and may be revised by USGS.</p>
+      <p class="prov"><span class="prov-tag">Beta</span> This dashboard is a beta version under active development. Data are shown as provided by each agency, for informational purposes only and without warranty.</p>
+      <p class="prov prov-2"><span class="prov-tag">Provisional USGS data</span> Recent readings are provisional and may be revised by USGS. <a href="https://waterdata.usgs.gov/provisional-data-statement/" rel="noopener" target="_blank">USGS provisional data statement</a></p>
+      <p class="prov prov-2"><span class="prov-tag">Colorado DWR data</span> DWR readings are instantaneous, provisional, and subject to change. DWR data can be accessed through the <a href="https://dwr.state.co.us/Tools" rel="noopener" target="_blank">CDSS portal</a>.</p>
       <p class="prov prov-2"><span class="prov-tag">Gauge outages</span> Due to recent floods, some gauges are inoperative.</p>
     </div>
     <div class="status" id="status" data-state="loading" aria-live="polite">
@@ -268,6 +302,9 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
     </div>
   </header>
 
+  <section id="detail" class="detail" aria-live="polite" hidden></section>
+
+  <div id="main-view">
   <nav class="tabs" aria-label="Watersheds">
     <div class="tabs-row" id="tabs"></div>
   </nav>
@@ -289,6 +326,10 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
     <aside class="river" aria-labelledby="river-title">
       <h2 id="river-title">The river, top to bottom</h2>
       <p class="note">Line width follows the latest discharge. Select a gauge to jump to its chart.</p>
+      <div class="seg spine-toggle" role="group" aria-label="River spine values">
+        <button type="button" data-spine="discharge" aria-pressed="true">Discharge</button>
+        <button type="button" data-spine="gage" aria-pressed="false">Gage height</button>
+      </div>
       <div id="spine"></div>
       <div class="legend">
         <span class="main">Main stem</span><span class="trib">Tributary</span><span class="sj" id="legend-sj">San Juan below Navajo Lake</span><span class="res" id="legend-res">Reservoir</span>
@@ -343,8 +384,11 @@ tr.group-row th { text-align: left; color: var(--sanjuan); font-weight: 600; fon
     </div>
   </section>
 
+  </div>
+
   <footer>
-    <p>Data from the <a href="https://waterdata.usgs.gov/" rel="noopener">U.S. Geological Survey</a> and the <a href="https://dwr.state.co.us/tools/stations" rel="noopener">Colorado Division of Water Resources</a>. Recent readings are provisional and may be revised by each agency.</p>
+    <p>Data from the <a href="https://waterdata.usgs.gov/" rel="noopener">U.S. Geological Survey</a>, the <a href="https://dwr.state.co.us/Tools" rel="noopener">Colorado Division of Water Resources</a> (CDSS), the U.S. Army Corps of Engineers, and the Bureau of Reclamation. Recent readings are provisional and may be revised by each agency; see the <a href="https://waterdata.usgs.gov/provisional-data-statement/" rel="noopener">USGS provisional data statement</a>. DWR readings are instantaneous, provisional, and subject to change.</p>
+    <p>This dashboard is a beta version under active development. Data are shown as provided by each agency, for informational purposes only and without warranty.</p>
     <p>Readings refresh automatically every <span id="refresh-mins">15</span> minutes while this page is open.</p>
   </footer>
 </div>
@@ -422,8 +466,8 @@ const WATERSHEDS = [
       { site: "09359020", name: "Animas River below Silverton, CO",                     short: "Animas below Silverton", role: "main" },
       { site: "09359080", name: "Cascade Creek",                                         short: "Cascade Creek",          role: "trib" },
       { site: "09359500", name: "Animas River at Tall Timbers Resort above Tacoma, CO", short: "Animas above Tacoma",    role: "main" },
-      { site: "09361000", name: "Hermosa Creek near Hermosa, CO",                       short: "Hermosa Creek",          role: "trib" },
-      { site: "09361500", name: "Animas River at Durango, CO",                          short: "Animas at Durango",      role: "main", floodPeak: true },
+      { site: "09361000", name: "Hermosa Creek near Hermosa, CO",                       short: "Hermosa Creek",          role: "trib", offline: true },
+      { site: "09361500", name: "Animas River at Durango, CO",                          short: "Animas at Durango",      role: "main", floodPeak: true, detail: true },
       { site: "09362520", name: "Animas River at Pump Plant",                           short: "Animas at Pump Plant",   role: "main" },
       { site: "FLOALECO", agency: "dwr", name: "Florida River above Lemmon", short: "Florida River above Lemmon", role: "trib", river: "florida" },
       { site: "res-lemmon", name: "Lemmon Reservoir", short: "Lemmon Reservoir", role: "res", branch: true, river: "florida", fullPool: 8148,
@@ -513,6 +557,13 @@ const SHARED_GROUPS = {
 
 const CONFIG = {
   refreshMinutes: 15,
+  // A gauge whose newest reading is older than this is marked Offline, and its old values aren't shown as current.
+  offlineHours: 6,
+  // Gauge detail pages (beta): every USGS stream gauge gets one (including the shared San Juan and
+  // Colorado groups) when detailAllUsgs is true; otherwise only gauges on detailTabs, plus any with detail: true.
+  detailAllUsgs: true,
+  detailAllDwr: true, // Colorado DWR stream stations get pages too (not reservoirs)
+  detailTabs: ["animas"],
   // The tab shown when someone opens the site without a #watershed in the address.
   defaultTab: "animas",
   // Optional key for the newer USGS Water Data API (raises its rate limits).
@@ -573,7 +624,12 @@ async function fetchWaterServicesDaily(sites, startDate) {
 const errText = e => (e && e.message) ? (/Failed to fetch|NetworkError|Load failed/i.test(e.message) ? "network or blocked request" : e.message) : String(e);
 
 async function getJson(url, label) {
-  const res = await fetch(url);
+  let res;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await fetch(url);
+    if (res.status !== 429) break;
+    await new Promise(r => setTimeout(r, 1500 * (attempt + 1))); // back off, then try again
+  }
   if (!res.ok) throw new Error(label + " returned " + res.status);
   return res.json();
 }
@@ -592,9 +648,38 @@ function parseWaterServices(json, sites) {
       .map(p => ({ t: new Date(p.dateTime), v: Number(p.value) }))
       .filter(p => Number.isFinite(p.v) && p.v !== noData && !isNaN(p.t));
     if (pts.length > out.get(site)[key].length) out.get(site)[key] = pts;
+    // Status: the qualifier codes on the newest entry, including placeholder (no-data) entries,
+    // which is where USGS records reasons like equipment malfunction or flood damage.
+    const raw = best.value || [];
+    const newest = raw[raw.length - 1];
+    if (newest) {
+      const defs = {};
+      for (const q of best.qualifier || []) defs[q.qualifierCode] = q.qualifierDescription;
+      const entry = out.get(site);
+      entry.status = entry.status || {};
+      entry.status[key] = {
+        codes: newest.qualifiers || [], defs, t: new Date(newest.dateTime),
+        noData: Number(newest.value) === noData || !Number.isFinite(Number(newest.value)),
+      };
+    }
   }
   return out;
 }
+
+// Plain-language names for common USGS qualifier codes (USGS's own descriptions are used when sent).
+const QUAL_NAMES = {
+  P: "Provisional", A: "Approved", e: "Estimated", Eqp: "Equipment malfunction", Fld: "Flood damage",
+  Ice: "Ice affected", Mnt: "Maintenance", Dis: "Discontinued", Ssn: "Seasonal", Bkw: "Backwater",
+  Rat: "Rating being developed", ZFl: "Zero flow", Dry: "Dry", "***": "Temporarily unavailable",
+};
+function statusFor(g) {
+  const d = state.iv && state.iv.get(g.site);
+  const s = d && d.status;
+  if (!s) return null;
+  return s.discharge || s.gage || null;
+}
+const qualName = (code, defs) => QUAL_NAMES[code] || (defs && defs[code]) || code;
+const qualTitle = (code, defs) => (defs && defs[code]) || QUAL_NAMES[code] || "USGS qualifier code";
 
 async function fetchOgc(sites, hours) {
   const start = new Date(Date.now() - hours * 3600e3).toISOString();
@@ -1066,7 +1151,7 @@ const fDate = d3.timeFormat("%b %-d, %Y");
 
 function latestFor(site) {
   const d = state.iv && state.iv.get(site);
-  if (!d) return {};
+  if (!d) return state.iv && allGauges().some(g => g.site === site && g.offline) ? { offline: true } : {};
   const q = d.discharge, h = d.gage;
   const lastQ = q[q.length - 1], lastH = h[h.length - 1];
   let change = null;
@@ -1077,7 +1162,14 @@ function latestFor(site) {
     if (prior && Math.abs(+prior.t - target) < 3 * 3600e3) change = lastQ.v - prior.v;
   }
   const last = [lastQ, lastH].filter(Boolean).map(p => p.t);
-  return { q: lastQ ? lastQ.v : null, h: lastH ? lastH.v : null, change, at: last.length ? new Date(Math.max(...last)) : null };
+  const at = last.length ? new Date(Math.max(...last)) : null;
+  // offline: true on a gauge marks it Offline by hand, whatever the data says.
+  const manualOff = allGauges().some(g => g.site === site && g.offline);
+  if (manualOff || (at && Date.now() - +at > CONFIG.offlineHours * 3600e3)) {
+    // Stale: keep the time of the last reading, but don't present its values as current.
+    return { q: null, h: null, change: null, at, offline: true };
+  }
+  return { q: lastQ ? lastQ.v : null, h: lastH ? lastH.v : null, change, at };
 }
 
 /* =========================================================
@@ -1142,7 +1234,7 @@ function floodToggle() {
   for (const [key, label] of [["discharge", "Discharge (cfs)"], ["gage", "Gage height (ft)"]]) {
     const b = document.createElement("button"); b.type = "button"; b.textContent = label;
     b.setAttribute("aria-pressed", String((state.floodMeasure || "discharge") === key));
-    b.addEventListener("click", () => { state.floodMeasure = key; drawFlood(); drawGrid(); });
+    b.addEventListener("click", () => { state.floodMeasure = key; drawFlood(); drawGrid(); if (detail.site) renderDetail(); });
     seg.append(b);
   }
   return seg;
@@ -1337,7 +1429,7 @@ function drawSpine() {
     const node = svg.append("g").attr("class", "node").attr("tabindex", 0).attr("role", "button")
       .attr("aria-label", p.g.role === "res"
         ? `${p.g.short}: ${resLatest(p.g).elev != null ? resMetric(p.g).label.toLowerCase() + " " + resMetric(p.g).fmt(resLatest(p.g).elev) + " " + resMetric(p.g).unit : "no recent reading"}. Jump to chart.`
-        : `${p.g.short}: ${p.l.q != null ? fCfs(p.l.q) + " cfs" : "no recent reading"}. Jump to chart.`)
+        : `${p.g.short}: ${state.spineMeasure === "gage" ? (p.l.h != null ? fFt(p.l.h) + " feet" : "no gage height") : (p.l.q != null ? fCfs(p.l.q) + " cfs" : "no recent reading")}. Jump to chart.`)
       .on("click", () => jumpTo(p.g.site))
       .on("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); jumpTo(p.g.site); } });
     node.append("circle").attr("class", "halo").attr("cx", p.x).attr("cy", p.y).attr("r", 10).attr("fill", "var(--panel)").attr("stroke", "none");
@@ -1354,7 +1446,10 @@ function drawSpine() {
       const r = resLatest(p.g);
       valText = r.elev != null ? resMetric(p.g).fmt(r.elev) + " " + resMetric(p.g).unit + " " + resMetric(p.g).short + (r.pct != null ? ", " + d3.format(".0f")(r.pct) + "% full" : "") : (!hasSources(p.g) ? "Data source needed" : state.loading ? "Loading" : "No recent reading");
     } else {
-      valText = p.l.q != null ? fCfs(p.l.q) + " cfs" : (state.loading && !hasData() ? "Loading" : "No recent reading");
+      const sv = state.spineMeasure === "gage" ? p.l.h : p.l.q;
+      valText = sv != null ? (state.spineMeasure === "gage" ? fFt(sv) + " ft" : fCfs(sv) + " cfs")
+        : p.l.offline ? "Offline, no recent reading"
+        : (state.loading && !hasData() ? "Loading" : state.spineMeasure === "gage" ? "No gage height reported" : "No recent reading");
     }
     node.append("text").attr("class", "label-val").attr("x", lxFor(p)).attr("y", p.y + 16).text(valText);
   }
@@ -1398,15 +1493,33 @@ function drawGrid() {
 
     const head = document.createElement("div"); head.className = "gauge-head";
     const left = document.createElement("div");
-    const nm = document.createElement("div"); nm.className = "gauge-name"; nm.textContent = g.short;
+    const nm = document.createElement("div"); nm.className = "gauge-name";
+    if (hasDetail(g)) { const dl = document.createElement("a"); dl.href = "#gauge-" + g.site; dl.textContent = g.short; dl.title = "Explore this gauge (beta)"; nm.append(dl); }
+    else nm.textContent = g.short;
     const site = document.createElement("div"); site.className = "gauge-site";
     const a = document.createElement("a"); a.href = gaugePage(g);
     a.rel = "noopener"; a.target = "_blank"; a.textContent = (g.agency === "dwr" ? "Colorado DWR " : "USGS ") + g.site;
     site.append(a); left.append(nm, site);
+    const st = g.agency === "dwr" ? null : statusFor(g);
+    for (const code of (st && st.codes) || []) {
+      const q = document.createElement("span"); q.className = "qual-tag";
+      q.textContent = code; q.title = qualTitle(code, st.defs);
+      site.append(" ", q);
+    }
+    if (l.offline) {
+      const tag = document.createElement("span"); tag.className = "offline-tag"; tag.textContent = "Offline";
+      nm.append(" ", tag);
+    }
     const val = document.createElement("div"); val.className = "gauge-val";
     if (latest != null) { val.textContent = fVal(latest); const s = document.createElement("small"); s.textContent = unit; val.append(s); }
     head.append(left, val);
     card.append(head);
+    if (l.offline) {
+      const off = document.createElement("div"); off.className = "gauge-sub";
+      const reasons = ((st && st.codes) || []).filter(c => !["P", "A", "e"].includes(c)).map(c => qualName(c, st.defs));
+      off.textContent = "No recent reading" + (reasons.length ? " (" + reasons.join(", ") + ")" : "") + "." + (l.at ? " Last reported " + fFull(l.at) + "." : "");
+      card.append(off);
+    }
     if (g.diversion && DIVERSIONS[g.diversion]) {
       const dv = DIVERSIONS[g.diversion];
       const note = document.createElement("div"); note.className = "gauge-sub";
@@ -1576,7 +1689,7 @@ function drawTable() {
     const a = document.createElement("a"); a.href = gaugePage(g);
     a.rel = "noopener"; a.target = "_blank"; a.textContent = (g.agency === "dwr" ? "DWR " : "") + g.site; site.append(a);
     const cell = (text, cls) => { const td = tr.insertCell(); td.textContent = text; td.className = cls || ""; };
-    cell(l.q != null ? fCfs(l.q) : (ready ? "No data" : "…"), "num");
+    cell(l.q != null ? fCfs(l.q) : l.offline ? "Offline" : (ready ? "No data" : "…"), "num");
     cell(l.change != null ? fSigned(l.change) : (ready ? "—" : "…"), "num");
     cell(l.h != null ? fFt(l.h) : (ready ? "—" : "…"), "num hide-narrow");
     cell(l.at ? fFull(l.at) : (ready ? "—" : "…"), "hide-narrow");
@@ -1611,6 +1724,912 @@ function drawTable() {
   }
 }
 
+
+/* =========================================================
+   GAUGE DETAIL PAGE (beta)
+   Opens at #gauge-<site> for gauges with detail: true. Explores one USGS gauge in depth:
+   current conditions vs. normal, a large chart with the normal range for each date,
+   custom date ranges, CSV download, flood peaks, and every annual peak on record.
+   ========================================================= */
+// Water-quality parameters a USGS gauge may carry. Only those with data at a gauge are shown.
+const WQ_PARAMS = [
+  { key: "temp", code: "00010", label: "Water temperature", short: "Water temp", unit: "°C", fmt: ".1f" },
+  { key: "cond", code: "00095", label: "Specific conductance", short: "Conductance", unit: "µS/cm", fmt: ",.0f" },
+  { key: "ph", code: "00400", label: "pH", short: "pH", unit: "", fmt: ".2f" },
+  { key: "do", code: "00300", label: "Dissolved oxygen", short: "Dissolved O₂", unit: "mg/L", fmt: ".1f" },
+  { key: "turb", code: "63680", label: "Turbidity", short: "Turbidity", unit: "FNU", fmt: ",.1f" },
+];
+// A reading of exactly 0 for these is treated as a sensor problem, not a real value:
+// the reading is dropped, so the parameter shows as offline and charts show a gap.
+const ZERO_INVALID = new Set(["temp", "ph", "turb"]);
+const cToF = c => c * 9 / 5 + 32;
+// Value with units; water temperature is shown in both °C and °F.
+function fmtWithUnit(key, v) {
+  const d = paramDef(key);
+  if (key === "temp") return d3.format(".1f")(v) + " °C (" + d3.format(".1f")(cToF(v)) + " °F)";
+  return d.f(v) + (d.unit ? " " + d.unit : "");
+}
+const cleanVals = (key, pts) => (ZERO_INVALID.has(key) ? pts.filter(p => p.v !== 0) : pts);
+const isDwrSite = site => { const f = gaugeBySite(site); return !!(f && f.g.agency === "dwr"); };
+
+/* ---- DWR detail data ----
+   DWR station metadata (the telemetrystation endpoint) lists each parameter a station reports, with its
+   latest value, plus location. Field names are read defensively since they aren't documented here. */
+async function fetchDwrStation(abbrev) {
+  const key = "dwrstation|" + abbrev;
+  if (cache.has(key)) return cache.get(key).data;
+  let url = `${DWR}/telemetrystation/?format=json&abbrev=${encodeURIComponent(abbrev)}`;
+  if (CONFIG.dwrApiKey) url += "&apiKey=" + encodeURIComponent(CONFIG.dwrApiKey);
+  const json = await getJson(url, "Colorado DWR");
+  const rows = json.ResultList || [];
+  const first = rows[0] || {};
+  const pick = (o, names) => { for (const n of names) if (o[n] != null && o[n] !== "") return o[n]; return null; };
+  const elev = Number(pick(first, ["elevation", "elev", "stationElevation", "altitude"]));
+  const data = {
+    info: { name: pick(first, ["stationName", "name"]), lat: Number(pick(first, ["latitude", "lat"])) || null, lon: Number(pick(first, ["longitude", "lon", "long"])) || null,
+      altFt: Number.isFinite(elev) && elev > 0 ? elev : null, datum: "" },
+    params: rows.map(r => ({ name: String(pick(r, ["parameter", "parameterName"]) || ""), unit: String(pick(r, ["units", "measUnit", "unit"]) || ""),
+      v: Number(pick(r, ["measValue", "value"])), t: parseDenver(pick(r, ["measDateTime", "measDate"])) })).filter(p => p.name),
+  };
+  cache.set(key, { data, at: Date.now() });
+  return data;
+}
+// Match a DWR parameter name to one of the water-quality measures (air and battery readings are left out).
+function dwrWqKey(name) {
+  const n = name.toUpperCase();
+  if (/AIR|BATT|VOLT|PRECIP|SNOW|WIND|HUMID/.test(n)) return null;
+  if (/TEMP/.test(n)) return "temp";
+  if (/^PH|_PH|PH$/.test(n)) return "ph";
+  if (/COND|SPC/.test(n)) return "cond";
+  if (/TURB/.test(n)) return "turb";
+  if (/^DO$|DO_|DISOX|DISS.*OX|OXYGEN/.test(n)) return "do";
+  return null;
+}
+// Temperatures are kept in °C everywhere; DWR may report °F.
+function dwrToC(pts, unit) {
+  const f = /F/i.test(unit) || (!/C/i.test(unit) && pts.length && d3.median(pts, p => p.v) > 35);
+  return f ? pts.map(p => ({ t: p.t, v: (p.v - 32) * 5 / 9 })) : pts;
+}
+async function fetchDwrDetailSeries(g, start, end, daily, keys) {
+  const params = Object.assign({}, DWR_PARAM, g.dwrParams || {});
+  const out = { info: null, status: {} };
+  Object.keys(DETAIL_PARAMS).forEach(k => { out[k] = []; });
+  await Promise.all(keys.map(async key => {
+    let param = params[key], unit = "";
+    if (!param && detail.wq && detail.wq[key] && detail.wq[key].dwrParam) { param = detail.wq[key].dwrParam; unit = detail.wq[key].unit || ""; }
+    if (!param) return;
+    try {
+      let pts = (await fetchDwrSeries(g.site, param, start, daily)).filter(p => +p.t <= +end);
+      if (key === "temp") pts = dwrToC(pts, unit);
+      out[key] = cleanVals(key, pts);
+    } catch (e) { console.warn(e); }
+  }));
+  if (!keys.some(k => out[k].length)) throw new Error("No readings returned for this range");
+  return out;
+}
+
+const DETAIL_PARAMS = Object.assign({ discharge: "00060", gage: "00065" }, Object.fromEntries(WQ_PARAMS.map(p => [p.key, p.code])));
+// Label, unit, and number format for any chartable measure.
+function paramDef(key) {
+  if (key === "discharge") return { key, label: "Discharge", short: "Discharge", unit: "cfs", f: fCfs, csv: "discharge_cfs" };
+  if (key === "gage") return { key, label: "Gage height", short: "Gage height", unit: "ft", f: fFt, csv: "gage_height_ft" };
+  const p = WQ_PARAMS.find(q => q.key === key) || WQ_PARAMS[0];
+  return { key, label: p.label, short: p.short, unit: p.unit, f: d3.format(p.fmt), csv: p.key + (p.unit ? "_" + p.unit.replace(/[^A-Za-z]/g, "") : "") };
+}
+const detail = { site: null, range: "week", measure: "discharge", from: "", to: "", series: null, daily: false, err: "", loading: false,
+  wyYears: [], wyMax: false, wyMin: false, wyMedian: false, wyLog: false };
+let detailToken = 0;
+
+function hasDetail(g) {
+  if (g.detail) return true;
+  if (g.role === "res") return false;
+  if (g.agency === "dwr") return !!CONFIG.detailAllDwr;
+  if (CONFIG.detailAllUsgs) return true;
+  const f = gaugeBySite(g.site);
+  return !!(f && f.w && CONFIG.detailTabs.includes(f.w.id));
+}
+
+function gaugeBySite(site) {
+  for (const w of WATERSHEDS) for (const g of w.gauges) if (g.site === site) return { g, w };
+  for (const k of Object.keys(SHARED_GROUPS)) for (const g of SHARED_GROUPS[k].gauges) if (g.site === site) return { g, w: null };
+  return null;
+}
+
+function parseDetail(json) {
+  const out = { info: null, status: {} };
+  const rank = {};
+  Object.keys(DETAIL_PARAMS).forEach(k => { out[k] = []; rank[k] = -1; });
+  for (const ts of (json.value && json.value.timeSeries) || []) {
+    const code = ts.variable.variableCode[0].value;
+    const key = Object.keys(DETAIL_PARAMS).find(k => DETAIL_PARAMS[k] === code);
+    if (!out.info && ts.sourceInfo) {
+      const geo = ts.sourceInfo.geoLocation && ts.sourceInfo.geoLocation.geogLocation;
+      out.info = { name: ts.sourceInfo.siteName, lat: geo && geo.latitude, lon: geo && geo.longitude };
+    }
+    if (!key) continue;
+    const noData = Number(ts.variable.noDataValue);
+    const best = (ts.values || []).reduce((a, b) => ((b.value || []).length > (a.value || []).length ? b : a), { value: [] });
+    const pts = cleanVals(key, best.value.map(p => ({ t: new Date(p.dateTime), v: Number(p.value) }))
+      .filter(p => Number.isFinite(p.v) && p.v !== noData && !isNaN(p.t)));
+    // Daily values come as several statistics; prefer the mean, then the median, then the longest series.
+    const opt = ((ts.variable.options && ts.variable.options.option) || []).find(o => o.name === "Statistic");
+    const stat = opt && opt.optionCode;
+    const r = stat === "00003" ? 3 : stat === "00008" ? 2 : 1;
+    if (r > rank[key] || (r === rank[key] && pts.length > out[key].length)) {
+      out[key] = pts; rank[key] = r;
+      const newest = best.value[best.value.length - 1];
+      if (newest) out.status[key] = { codes: newest.qualifiers || [], t: new Date(newest.dateTime), noData: Number(newest.value) === noData };
+    }
+  }
+  return out;
+}
+
+// keys: which measures to download (default discharge and gage height). Asking only for what a view
+// needs keeps the newer API, which takes one request per measure, well inside its request limits.
+async function fetchDetailSeries(site, start, end, daily, keys = ["discharge", "gage"]) {
+  if (isDwrSite(site)) return fetchDwrDetailSeries(gaugeBySite(site).g, start, end, daily, keys);
+  const s = isoDateLocal(start), e = isoDateLocal(end);
+  const want = Object.entries(DETAIL_PARAMS).filter(([k]) => keys.includes(k));
+  try {
+    const url = "https://waterservices.usgs.gov/nwis/" + (daily ? "dv" : "iv") + "/?format=json&sites=" + site
+      + "&parameterCd=" + want.map(([, c]) => c).join(",") + (daily ? "&statCd=00003,00008" : "")
+      + "&startDT=" + s + "&endDT=" + e + "&siteStatus=all";
+    const d = parseDetail(await getJson(url, "Water Services"));
+    if (keys.some(k => d[k] && d[k].length)) return d;
+  } catch (e1) { console.warn(e1); }
+  // Newer API fallback
+  const out = { info: null, status: {} };
+  Object.keys(DETAIL_PARAMS).forEach(k => { out[k] = []; });
+  await Promise.all(want.map(async ([key, code]) => {
+    try {
+      let url = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/" + (daily ? "daily" : "continuous") + "/items?f=json&limit=10000"
+        + "&monitoring_location_id=USGS-" + site + "&parameter_code=" + code + (daily ? "&statistic_id=00003" : "")
+        + "&time=" + encodeURIComponent(s + "T00:00:00Z/" + e + "T23:59:59Z");
+      if (CONFIG.apiKey) url += "&api_key=" + encodeURIComponent(CONFIG.apiKey);
+      out[key] = cleanVals(key, await fetchOgcPages(url));
+    } catch (err) { console.warn(err); }
+  }));
+  if (!keys.some(k => out[k].length)) throw new Error("No readings returned for this range");
+  return out;
+}
+
+// Daily statistics for discharge, keyed by month-day ("M-D"). Uses the USGS statistics service;
+// if that fails, calculates them from the gauge's full record of daily values.
+const STATS_STORE = "sg-stats-v1|";
+function loadStoredStats(site) {
+  try {
+    const raw = localStorage.getItem(STATS_STORE + site);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (Date.now() - o.at > 7 * 86400e3) return null;
+    return { map: new Map(o.map), begin: o.begin, end: o.end, computed: o.computed };
+  } catch (e) { return null; }
+}
+function storeStats(site, data) {
+  try { localStorage.setItem(STATS_STORE + site, JSON.stringify({ at: Date.now(), map: [...data.map], begin: data.begin, end: data.end, computed: !!data.computed })); }
+  catch (e) { /* storage full or unavailable: fine, just not remembered */ }
+}
+
+async function fetchDailyStats(site) {
+  const key = "stats|" + site;
+  if (cache.has(key)) return cache.get(key).data;
+  const stored = loadStoredStats(site);
+  if (stored) { cache.set(key, { data: stored, at: Date.now() }); return stored; }
+  let data = null;
+  if (!isDwrSite(site)) { try { data = await fetchStatService(site); } catch (e) { console.warn(e); } }
+  if (!data || data.map.size < 300) {
+    try { data = await computeDailyStats(site); } catch (e) { console.warn(e); }
+  }
+  if (!data) throw new Error("Daily statistics unavailable");
+  cache.set(key, { data, at: Date.now() });
+  storeStats(site, data);
+  return data;
+}
+
+async function fetchStatService(site) {
+  const url = "https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites=" + site + "&statReportType=daily&statTypeCd=all&parameterCd=00060";
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Statistics returned " + res.status);
+  const lines = (await res.text()).split(/\r?\n/).filter(l => l && !l.startsWith("#"));
+  const head = lines[0].split("\t");
+  const col = n => head.indexOf(n);
+  const map = new Map();
+  let begin = Infinity, end = -Infinity;
+  for (const l of lines.slice(2)) {
+    const c = l.split("\t");
+    const md = Number(c[col("month_nu")]) + "-" + Number(c[col("day_nu")]);
+    if (map.has(md)) continue;
+    const num = n => { const i = col(n); if (i < 0 || c[i] === "" || c[i] == null) return null; const v = Number(c[i]); return Number.isFinite(v) ? v : null; };
+    map.set(md, { p10: num("p10_va"), p25: num("p25_va"), p50: num("p50_va"), p75: num("p75_va"), p90: num("p90_va"),
+      min: num("min_va"), max: num("max_va"), minYr: num("min_va_yr"), maxYr: num("max_va_yr") });
+    begin = Math.min(begin, num("begin_yr") || Infinity); end = Math.max(end, num("end_yr") || -Infinity);
+  }
+  return { map, begin: Number.isFinite(begin) ? begin : null, end: Number.isFinite(end) ? end : null };
+}
+
+async function computeDailyStats(site) {
+  const s = await fetchDetailSeries(site, new Date(1880, 0, 1), new Date(), true, ["discharge"]);
+  const pts = s.discharge;
+  if (!pts.length) throw new Error("No daily history");
+  const byMd = d3.group(pts, p => (p.t.getMonth() + 1) + "-" + p.t.getDate());
+  const map = new Map();
+  for (const [md, arr] of byMd) {
+    const vals = arr.map(p => p.v).sort(d3.ascending);
+    const hi = arr.reduce((a, b) => (b.v > a.v ? b : a)), lo = arr.reduce((a, b) => (b.v < a.v ? b : a));
+    map.set(md, { p10: d3.quantileSorted(vals, 0.1), p25: d3.quantileSorted(vals, 0.25), p50: d3.quantileSorted(vals, 0.5),
+      p75: d3.quantileSorted(vals, 0.75), p90: d3.quantileSorted(vals, 0.9), min: lo.v, max: hi.v, minYr: lo.t.getFullYear(), maxYr: hi.t.getFullYear() });
+  }
+  const yrs = d3.extent(pts, p => p.t.getFullYear());
+  return { map, begin: yrs[0], end: yrs[1], computed: true };
+}
+
+const statFor = (stats, d) => stats && stats.map.get((d.getMonth() + 1) + "-" + d.getDate());
+
+function detailRange() {
+  if (detail.range === "custom" && detail.from && detail.to) {
+    const start = new Date(detail.from + "T00:00:00"), end = new Date(detail.to + "T23:59:59");
+    return { start, end, daily: (end - start) > 31 * 86400e3 };
+  }
+  const spec = rangeSpec(detail.range === "custom" ? "week" : detail.range);
+  return { start: spec.start, end: new Date(), daily: spec.daily };
+}
+
+async function loadDetail() {
+  const site = detail.site, token = ++detailToken;
+  detail.loading = true; detail.err = "";
+  renderDetail();
+  const { start, end, daily } = detailRange();
+  let series = null;
+  const keys = [...new Set(["discharge", "gage", detail.measure])];
+  try { series = await fetchDetailSeries(site, start, end, daily, keys); } catch (e) { detail.err = errText(e); }
+  // Current conditions: the last two days of recent readings
+  if (detail.nowSite !== site) {
+    try { detail.now = await fetchDetailSeries(site, new Date(Date.now() - 2 * 86400e3), new Date(), false); detail.nowSite = site; }
+    catch (e) { console.warn(e); detail.now = null; }
+  }
+  if (detail.infoSite !== site) {
+    try { detail.siteInfo = await fetchSiteInfo(site); } catch (e) { console.warn(e); detail.siteInfo = null; }
+    detail.infoSite = site;
+  }
+  if (detail.wqSite !== site) {
+    detail.wq = null; detail.wqSite = site;
+    loadWaterQuality(site); // runs alongside; redraws when ready
+  }
+  if (detail.statsSite !== site || !detail.stats) {
+    try { detail.stats = await fetchDailyStats(site); } catch (e) { console.warn(e); detail.stats = null; }
+    detail.statsSite = site;
+  }
+  if (!state.flood || !state.flood.has(site)) {
+    const entry = {};
+    const gg = gaugeBySite(site).g;
+    const recordsSite = (typeof gg.floodPeak === "object" && gg.floodPeak.records) || (gg.agency !== "dwr" ? site : null);
+    try { entry.peak = gg.agency === "dwr" ? await fetchDwrFloodPeak(gg) : await fetchFloodPeak(site); } catch (e) { console.warn(e); }
+    if (recordsSite) { try { entry.annual = await fetchAnnualPeaks(recordsSite); } catch (e) { console.warn(e); entry.annual = null; } }
+    else entry.annual = null;
+    state.flood = state.flood || new Map(); state.flood.set(site, entry);
+  }
+  if (token !== detailToken) return;
+  Object.assign(detail, { series, daily, start, end, loading: false });
+  renderDetail();
+  loadWaterYears();
+}
+
+/* ---- Water quality: what's measured, current values, and when it's collected ---- */
+async function loadWaterQualityDwr(site) {
+  const info = {};
+  WQ_PARAMS.forEach(p => { info[p.key] = { recent: [], status: null, history: [] }; });
+  try {
+    const st = await fetchDwrStation(site);
+    const y = new Date().getFullYear();
+    const matched = new Map();
+    st.params.forEach(p => { const k = dwrWqKey(p.name); if (k && !matched.has(k)) matched.set(k, p); });
+    await Promise.all([...matched].map(async ([key, p]) => {
+      const w = info[key];
+      w.dwrParam = p.name; w.unit = p.unit;
+      try {
+        let recent = await fetchDwrSeries(site, p.name, new Date(Date.now() - 7 * 86400e3), false);
+        let hist = await fetchDwrSeries(site, p.name, new Date(y - 3, 0, 1), true);
+        if (key === "temp") { recent = dwrToC(recent, p.unit); hist = dwrToC(hist, p.unit); }
+        w.recent = cleanVals(key, recent); w.history = cleanVals(key, hist);
+      } catch (e) { console.warn(e); }
+    }));
+  } catch (e) { console.warn(e); }
+  WQ_PARAMS.forEach(p => { info[p.key].season = seasonOf(info[p.key].history); });
+  if (detail.site === site) { detail.wq = info; renderDetail(); }
+}
+
+async function loadWaterQuality(site) {
+  if (isDwrSite(site)) return loadWaterQualityDwr(site);
+  const codes = WQ_PARAMS.map(p => p.code).join(",");
+  const info = {};
+  WQ_PARAMS.forEach(p => { info[p.key] = { recent: [], status: null, history: [] }; });
+  const y = new Date().getFullYear();
+  // Three past years plus this year to date: seasons come from the past years, and the
+  // "is it collected?" check looks at the past calendar year and this year.
+  const histStart = (y - 3) + "-01-01", histEnd = isoDateLocal(new Date());
+  // Recent readings (last 7 days), including the status codes on placeholder entries.
+  // Older USGS service first; the newer API if that fails.
+  let gotRecent = false, gotHist = false;
+  try {
+    const r = parseDetail(await getJson("https://waterservices.usgs.gov/nwis/iv/?format=json&sites=" + site + "&parameterCd=" + codes + "&period=P7D&siteStatus=all", "Water Services"));
+    WQ_PARAMS.forEach(p => { info[p.key].recent = r[p.key]; info[p.key].status = r.status[p.key] || null; });
+    gotRecent = true;
+  } catch (e) { console.warn(e); }
+  if (!gotRecent) {
+    try {
+      const start = new Date(Date.now() - 7 * 86400e3).toISOString();
+      const rows = await fetchOgcRaw("continuous", site, start + "/..");
+      WQ_PARAMS.forEach(p => {
+        const mine = rows.filter(r => String(r.parameter_code) === p.code);
+        info[p.key].recent = cleanVals(p.key, toPts(mine));
+        const newest = mine.reduce((a, b) => (!a || new Date(b.time) > new Date(a.time) ? b : a), null);
+        if (newest) info[p.key].status = { codes: [].concat(newest.qualifier || newest.qualifiers || []).filter(Boolean).map(String), t: new Date(newest.time), noData: newest.value == null };
+      });
+    } catch (e) { console.warn(e); }
+  }
+  // Three full past years of daily values, to learn each parameter's season
+  try {
+    const h = parseDetail(await getJson("https://waterservices.usgs.gov/nwis/dv/?format=json&sites=" + site + "&parameterCd=" + codes
+      + "&statCd=00003,00008&startDT=" + histStart + "&endDT=" + histEnd + "&siteStatus=all", "Water Services daily"));
+    WQ_PARAMS.forEach(p => { info[p.key].history = h[p.key]; });
+    gotHist = true;
+  } catch (e) { console.warn(e); }
+  if (!gotHist) {
+    try {
+      const rows = await fetchOgcRaw("daily", site, histStart + "/" + histEnd);
+      WQ_PARAMS.forEach(p => {
+        const mine = rows.filter(r => String(r.parameter_code) === p.code);
+        // Prefer daily means (00003), then medians (00008)
+        const pick = ["00003", "00008"].map(s => mine.filter(r => String(r.statistic_id) === s)).find(a => a.length) || mine;
+        info[p.key].history = cleanVals(p.key, toPts(pick));
+      });
+    } catch (e) { console.warn(e); }
+  }
+  WQ_PARAMS.forEach(p => { info[p.key].season = seasonOf(info[p.key].history); });
+  if (detail.site === site) { detail.wq = info; renderDetail(); }
+}
+
+// Newer USGS API: every series at a site for a time span, as raw rows (one per reading).
+async function fetchOgcRaw(collection, site, time) {
+  let url = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/" + collection + "/items?f=json&limit=10000"
+    + "&monitoring_location_id=USGS-" + site + "&time=" + encodeURIComponent(time);
+  if (CONFIG.apiKey) url += "&api_key=" + encodeURIComponent(CONFIG.apiKey);
+  const rows = [];
+  for (let page = 0; url && page < 8; page++) {
+    const json = await getJson(url, "USGS Water Data API");
+    (json.features || []).forEach(f => rows.push(Object.assign({}, f.properties, { _geom: f.geometry })));
+    const next = (json.links || []).find(l => l.rel === "next");
+    url = next ? next.href : null;
+  }
+  return rows;
+}
+const toPts = rows => rows.map(r => ({ t: new Date(r.time), v: Number(r.value) }))
+  .filter(p => r1ok(p)).sort((a, b) => a.t - b.t);
+const r1ok = p => Number.isFinite(p.v) && !isNaN(p.t);
+
+// Site location from the newer API, for when the older service can't provide it.
+// Site location and gauge elevation. Newer API first, then the older site service.
+async function fetchSiteInfo(site) {
+  if (isDwrSite(site)) return (await fetchDwrStation(site)).info;
+  try {
+    let url = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/monitoring-locations/items/USGS-" + site + "?f=json";
+    if (CONFIG.apiKey) url += "&api_key=" + encodeURIComponent(CONFIG.apiKey);
+    const f = await getJson(url, "USGS Water Data API");
+    const c = f.geometry && f.geometry.coordinates, pr = f.properties || {};
+    const alt = Number(pr.altitude);
+    return { name: pr.monitoring_location_name || pr.name, lat: c && c[1], lon: c && c[0],
+      altFt: pr.altitude != null && pr.altitude !== "" && Number.isFinite(alt) ? alt : null, datum: pr.vertical_datum || pr.altitude_datum || "" };
+  } catch (e1) {
+    console.warn(e1);
+    const res = await fetch("https://waterservices.usgs.gov/nwis/site/?format=rdb&sites=" + site + "&siteOutput=expanded&siteStatus=all");
+    if (!res.ok) throw new Error("Site service returned " + res.status);
+    const lines = (await res.text()).split(/\r?\n/).filter(l => l && !l.startsWith("#"));
+    const head = lines[0].split("\t"), row = (lines[2] || "").split("\t");
+    const v = n => row[head.indexOf(n)];
+    const alt = Number(v("alt_va"));
+    return { name: v("station_nm"), lat: Number(v("dec_lat_va")), lon: Number(v("dec_long_va")),
+      altFt: v("alt_va") && Number.isFinite(alt) ? alt : null, datum: v("alt_datum_cd") || "" };
+  }
+}
+
+// Typical collection season from past daily values: median first and last day of each year.
+function seasonOf(pts) {
+  if (!pts || !pts.length) return null;
+  const doy = d => Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(d.getFullYear(), 0, 1)) / 86400e3);
+  const thisYear = new Date().getFullYear();
+  const years = [...d3.group(pts.filter(p => p.t.getFullYear() < thisYear), p => p.t.getFullYear()).values()].filter(a => a.length > 20);
+  if (!years.length) return null;
+  const firsts = years.map(a => doy(d3.min(a, p => p.t))), lasts = years.map(a => doy(d3.max(a, p => p.t)));
+  const start = d3.median(firsts), end = d3.median(lasts);
+  if (start <= 14 && end >= 350) return { yearRound: true };
+  const fmt = n => d3.timeFormat("%b %-d")(new Date(2025, 0, 1 + n));
+  return { start, end, text: fmt(start) + " to " + fmt(end), years: years.length };
+}
+
+// A parameter counts as collected at a gauge if it has valid readings since January 1 of last year.
+// A gauge can also list its parameters by hand, e.g. wq: ["temp", "cond"], or wq: [] for none.
+function wqCollected(key) {
+  const found = gaugeBySite(detail.site);
+  if (found && Array.isArray(found.g.wq)) return found.g.wq.includes(key);
+  const w = detail.wq && detail.wq[key];
+  if (!w) return false;
+  const since = new Date(new Date().getFullYear() - 1, 0, 1);
+  return w.recent.some(p => p.t >= since) || w.history.some(p => p.t >= since);
+}
+
+function renderWaterQuality(host) {
+  const wq = detail.wq;
+  if (!wq) return;
+  const present = WQ_PARAMS.filter(p => wqCollected(p.key));
+  if (!present.length) return;
+  const card = el("section", "d-card");
+  card.append(el("h3", "d-h3", "Water quality"));
+  card.append(el("p", "note", "Water-quality sensors at many gauges run seasonally. Collection seasons below are typical dates from recent years, not an official schedule."));
+  const tiles = el("div", "d-tiles");
+  const today = new Date();
+  const todayDoy = Math.round((Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) - Date.UTC(today.getFullYear(), 0, 1)) / 86400e3);
+  for (const p of present) {
+    const w = wq[p.key], def = paramDef(p.key);
+    const last = w.recent[w.recent.length - 1];
+    const fresh = last && Date.now() - +last.t < CONFIG.offlineHours * 3600e3;
+    const ssn = w.status && w.status.codes.includes("Ssn");
+    const outOfSeason = w.season && !w.season.yearRound && (todayDoy < w.season.start - 7 || todayDoy > w.season.end + 7);
+    const t = el("div", "d-tile");
+    t.append(el("div", "d-tile-label", p.label));
+    if (fresh) {
+      if (p.key === "temp") {
+        t.append(el("div", "d-tile-val", d3.format(".1f")(cToF(last.v)) + " °F"));
+        t.append(el("div", "d-tile-sub", d3.format(".1f")(last.v) + " °C"));
+      } else t.append(el("div", "d-tile-val", def.f(last.v) + (def.unit ? " " + def.unit : "")));
+      t.append(el("div", "d-tile-sub", "In season. " + fFull(last.t)));
+    } else if (ssn || outOfSeason) {
+      t.append(el("div", "d-tile-val d-tile-quiet", "Seasonal"));
+      t.append(el("div", "d-tile-sub", "Not currently collected" + (ssn ? " (USGS code Ssn)" : "") + "."));
+    } else {
+      t.append(el("div", "d-tile-val d-tile-quiet", "Offline"));
+      t.append(el("div", "d-tile-sub", "No recent valid reading."));
+    }
+    const sea = w.season ? (w.season.yearRound ? "Collected year-round." : "Typically collected " + w.season.text + ".") : "";
+    if (sea) t.append(el("div", "d-tile-sub", sea));
+    const histLast = w.history[w.history.length - 1];
+    const lastAny = last || histLast;
+    if (!fresh && lastAny) t.append(el("div", "d-tile-sub", "Last reading " + d3.timeFormat("%b %-d, %Y")(lastAny.t) + "."));
+    const btn = el("button", "d-mini", "Chart this"); btn.type = "button";
+    btn.addEventListener("click", () => {
+      detail.measure = p.key;
+      if (detail.series && !(detail.series[p.key] && detail.series[p.key].length)) loadDetail(); else renderDetail();
+      const c = document.querySelector(".d-explore"); if (c) c.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    t.append(btn);
+    tiles.append(t);
+  }
+  card.append(tiles);
+  host.append(card);
+}
+
+/* ---- Water year comparison ---- */
+const curWY = () => { const n = new Date(); return n.getMonth() >= 9 ? n.getFullYear() + 1 : n.getFullYear(); };
+const WY_COLORS = ["#1F6F8B", "#7A4E86", "#2F5D50", "#8A6D3B", "#A23B6E", "#4F6D8A"];
+// Days since October 1 of the water year.
+const wyIndex = (d, wy) => Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(wy - 1, 9, 1)) / 86400e3);
+// A leap water year (Oct 2023 to Sep 2024) gives a date for every month-day.
+const WY_REF = d3.range(366).map(i => new Date(2023, 9, 1 + i));
+
+async function loadWaterYears() {
+  const site = detail.site;
+  const years = [curWY(), ...detail.wyYears];
+  let changed = false;
+  await Promise.all(years.map(async y => {
+    const key = "wy|" + site + "|" + y;
+    if (cache.has(key)) return;
+    changed = true;
+    cache.set(key, { data: null, at: Date.now() }); // mark as loading
+    try {
+      const s = await fetchDetailSeries(site, new Date(y - 1, 9, 1), y === curWY() ? new Date() : new Date(y, 8, 30), true, ["discharge"]);
+      cache.set(key, { data: s.discharge, at: Date.now() });
+    } catch (e) { console.warn(e); cache.set(key, { data: [], at: Date.now(), err: true }); }
+  }));
+  if (changed && detail.site === site) renderDetail();
+}
+
+function openDetail(site) {
+  const found = gaugeBySite(site);
+  if (!found) { location.hash = ""; return; }
+  document.getElementById("main-view").hidden = true;
+  document.getElementById("detail").hidden = false;
+  if (detail.site !== site) Object.assign(detail, { site, range: "week", measure: "discharge", series: null, wyYears: [] });
+  document.title = found.g.short + " | SW Colorado Stream Gauges";
+  window.scrollTo(0, 0);
+  loadDetail();
+}
+function closeDetail() {
+  document.getElementById("main-view").hidden = false;
+  document.getElementById("detail").hidden = true;
+  detail.site = null;
+}
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function link(href, text) { const a = el("a", null, text); a.href = href; a.rel = "noopener"; if (!href.startsWith("#")) a.target = "_blank"; return a; }
+
+function renderDetail() {
+  const host = document.getElementById("detail");
+  host.replaceChildren();
+  const found = gaugeBySite(detail.site);
+  if (!found) return;
+  const { g, w } = found;
+  const backWs = w || currentWs(); // shared-group gauges go back to the tab you came from
+  const back = link("#" + backWs.id, "← Back to " + backWs.name);
+  back.className = "d-back";
+  host.append(back);
+
+  const head = el("div", "d-head");
+  const title = el("h2", "d-title", g.name);
+  title.append(" ", el("span", "prov-tag", "Beta"));
+  const meta = el("p", "d-meta");
+  meta.append(link(gaugePage(g), (g.agency === "dwr" ? "Colorado DWR " : "USGS ") + g.site), "  ");
+  const info = (detail.now && detail.now.info) || (detail.series && detail.series.info) || (detail.infoSite === detail.site && detail.siteInfo);
+  if (info && info.lat && info.lon) {
+    meta.append(" ", link(`https://www.google.com/maps?q=${info.lat},${info.lon}`, `${(+info.lat).toFixed(4)}, ${(+info.lon).toFixed(4)} (map)`));
+  }
+  const si = detail.infoSite === detail.site && detail.siteInfo;
+  if (si && si.altFt != null) {
+    meta.append(" ", el("span", null, `Gauge elevation ${d3.format(",.0f")(si.altFt)} ft (${d3.format(",.0f")(si.altFt * 0.3048)} m)` + (si.datum ? ", " + si.datum : "")));
+  }
+  if (detail.stats && detail.stats.begin) meta.append(" ", el("span", null, `Daily statistics ${detail.stats.begin}–${detail.stats.end}`));
+  head.append(title, meta);
+  host.append(head);
+
+  // ---- Current conditions ----
+  const now = detail.now;
+  const last = arr => (arr && arr.length ? arr[arr.length - 1] : null);
+  const q = last(now && now.discharge), h = last(now && now.gage), tmp = last(now && now.temp);
+  const fresh = p => p && Date.now() - +p.t < CONFIG.offlineHours * 3600e3;
+  const tiles = el("div", "d-tiles");
+  const tile = (label, value, sub) => { const t = el("div", "d-tile"); t.append(el("div", "d-tile-label", label), el("div", "d-tile-val", value)); if (sub) t.append(el("div", "d-tile-sub", sub)); tiles.append(t); };
+  const offline = g.offline || (q && !fresh(q));
+  if (detail.loading && !now) tile("Discharge", "…");
+  else if (offline || !q) tile("Discharge", "—", offline ? "Offline, no recent reading" : "No recent reading");
+  else {
+    let change = "";
+    if (now.discharge.length > 1) {
+      const target = +q.t - 24 * 3600e3;
+      const prior = now.discharge[d3.bisector(p => p.t).center(now.discharge, target)];
+      if (prior && Math.abs(+prior.t - target) < 3 * 3600e3) change = fSigned(q.v - prior.v) + " cfs in 24 hours";
+    }
+    tile("Discharge", fCfs(q.v) + " cfs", change || fFull(q.t));
+  }
+  if (h && fresh(h) && !g.offline) tile("Gage height", fFt(h.v) + " ft", fFull(h.t));
+  const st = q && fresh(q) && !g.offline ? statFor(detail.stats, new Date()) : null;
+  if (st && st.p50) {
+    const cls = q.v < st.p10 ? "Much below normal" : q.v < st.p25 ? "Below normal" : q.v <= st.p75 ? "Normal" : q.v <= st.p90 ? "Above normal" : "Much above normal";
+    tile("Compared with normal", cls, d3.format(".0f")(q.v / st.p50 * 100) + "% of the median for this date (" + fCfs(st.p50) + " cfs)");
+  }
+  host.append(tiles);
+
+  // ---- Water quality ----
+  renderWaterQuality(host);
+
+  // ---- Main chart ----
+  const card = el("section", "d-card");
+  card.classList.add("d-explore");
+  card.append(el("h3", "d-h3", "Explore the record"));
+  const controls = el("div", "controls");
+  const seg = (items, cur, on) => {
+    const s = el("div", "seg"); s.setAttribute("role", "group");
+    for (const [id, label] of items) {
+      const b = el("button", null, label); b.type = "button"; b.setAttribute("aria-pressed", String(cur === id));
+      b.addEventListener("click", () => on(id)); s.append(b);
+    }
+    return s;
+  };
+  const measures = [["discharge", "Discharge (cfs)"], ["gage", "Gage height (ft)"]];
+  WQ_PARAMS.forEach(p => {
+    const w = detail.wq && detail.wq[p.key];
+    const has = detail.wq ? wqCollected(p.key) : false;
+    if (has || detail.measure === p.key) measures.push([p.key, p.short + (p.unit ? " (" + p.unit + ")" : "")]);
+  });
+  controls.append(seg(measures, detail.measure,
+    id => { detail.measure = id; if (detail.series && !(detail.series[id] && detail.series[id].length)) loadDetail(); else renderDetail(); }));
+  controls.append(seg([["24h", "24 hours"], ["72h", "72 hours"], ["week", "Week"], ["30d", "30 days"], ["3mo", "3 months"], ["year", "Year"], ["wytd", "Water Year to Date"], ["custom", "Custom"]],
+    detail.range, id => { detail.range = id; if (id === "custom") { renderDetail(); } else loadDetail(); }));
+  card.append(controls);
+  if (detail.range === "custom") {
+    const row = el("div", "d-custom");
+    const today = isoDateLocal(new Date());
+    const from = el("input"); from.type = "date"; from.value = detail.from || isoDateLocal(new Date(Date.now() - 30 * 86400e3)); from.max = today;
+    const to = el("input"); to.type = "date"; to.value = detail.to || today; to.max = today;
+    const go = el("button", null, "Show"); go.type = "button";
+    go.addEventListener("click", () => { detail.from = from.value; detail.to = to.value; if (detail.from && detail.to && detail.from <= detail.to) loadDetail(); });
+    const lf = el("label", null, "From "); lf.append(from);
+    const lt = el("label", null, "To "); lt.append(to);
+    row.append(lf, lt, go);
+    card.append(row);
+  }
+  const box = el("div", "d-chart");
+  card.append(box);
+  host.append(card);
+  const key = detail.measure;
+  const pts = detail.series ? detail.series[key] : [];
+  if (detail.loading) { box.classList.add("skeleton"); }
+  else if (detail.err && !detail.series) box.append(el("p", "gauge-empty", "Couldn’t load readings: " + detail.err));
+  else if (!pts || pts.length < 2) box.append(el("p", "gauge-empty", "No " + paramDef(key).label.toLowerCase() + " readings in this range."
+    + (detail.wq && detail.wq[key] && detail.wq[key].season && !detail.wq[key].season.yearRound ? " This is collected seasonally, typically " + detail.wq[key].season.text + "." : "")));
+  else {
+    drawDetailChart(box, pts, key);
+    const note = el("p", "note");
+    note.textContent = (detail.daily ? "Daily mean values. " : "Readings about every 15 minutes. ")
+      + (key === "discharge" && detail.stats ? "The shaded bands show the normal range for each date: the middle half of years (25th–75th percentile) and the middle 80% (10th–90th), with the median as a dashed line." : "");
+    card.append(note);
+    const dl = el("button", "d-dl", "Download these readings (CSV)"); dl.type = "button";
+    dl.addEventListener("click", () => downloadCsv(g, pts, key));
+    card.append(dl);
+  }
+
+  // ---- Water year comparison ----
+  renderWaterYearCard(g, host);
+
+  // ---- Flood peaks ----
+  const fp = el("section", "flood");
+  fp.append(el("h3", "d-h3", FLOOD.label + " flood peak"));
+  fp.append(floodToggle());
+  const inner = el("div"); fp.append(inner);
+  host.append(fp);
+  renderFloodItems(inner, [g]);
+
+  // ---- Annual peaks ----
+  const ap = el("section", "d-card");
+  ap.append(el("h3", "d-h3", "Annual peak discharge on record"));
+  const entry = state.flood && state.flood.get(g.site);
+  const apBox = el("div", "d-chart d-chart-short");
+  ap.append(apBox);
+  host.append(ap);
+  if (!entry) apBox.classList.add("skeleton");
+  else if (!entry.annual || !entry.annual.length) apBox.append(el("p", "gauge-empty", g.agency === "dwr"
+    ? "Colorado DWR doesn’t publish an annual peak record for this station."
+    : "The USGS annual peak file couldn’t be loaded."));
+  else drawAnnualPeaks(apBox, entry.annual.filter(p => Number.isFinite(p.discharge) && p.discharge > 0), entry.peak && entry.peak.discharge);
+}
+
+function drawDetailChart(box, series, key) {
+  const W = Math.max(300, box.clientWidth), H = 320;
+  const m = { l: 56, r: key === "temp" ? 52 : 12, t: 12, b: 26 };
+  const { start, end } = detail;
+  const x = d3.scaleTime([start, Math.min(+end, Date.now())], [m.l, W - m.r]);
+  // Normal-range bands from daily statistics (discharge only)
+  let bands = [];
+  if (key === "discharge" && detail.stats) {
+    for (let d = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 12); +d <= Math.min(+end, Date.now()) + 86400e3; d = new Date(+d + 86400e3)) {
+      const s = statFor(detail.stats, d);
+      if (s && s.p10 != null && s.p90 != null) bands.push({ t: new Date(d), ...s });
+    }
+  }
+  const vals = series.map(p => p.v).concat(bands.flatMap(b => [b.p10, b.p90]));
+  const ext = d3.extent(vals);
+  const pad = Math.max((ext[1] - ext[0]) * 0.08, 0.1);
+  const y = d3.scaleLinear([key === "discharge" ? Math.max(0, ext[0] - pad) : ext[0] - pad, ext[1] + pad], [H - m.b, m.t]).nice();
+  const svg = d3.select(box).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%").attr("height", H).style("display", "block");
+  const fY = key === "discharge" ? fCfs : paramDef(key).f;
+  svg.append("g").selectAll("line").data(y.ticks(5)).join("line").attr("class", "gridline").attr("x1", m.l).attr("x2", W - m.r).attr("y1", v => y(v)).attr("y2", v => y(v));
+  svg.append("g").selectAll("text").data(y.ticks(5)).join("text").attr("class", "tick").attr("x", m.l - 6).attr("y", v => y(v)).attr("dy", "0.32em").attr("text-anchor", "end").text(fY);
+  if (key === "temp") {
+    // Second axis on the right in °F
+    const yF = d3.scaleLinear(y.domain().map(cToF), y.range());
+    svg.append("g").selectAll("text").data(yF.ticks(5)).join("text").attr("class", "tick").attr("x", W - m.r + 6).attr("y", v => yF(v)).attr("dy", "0.32em").attr("text-anchor", "start").text(v => d3.format(".0f")(v) + " °F");
+    svg.append("text").attr("class", "tick").attr("x", m.l - 6).attr("y", m.t - 2).attr("text-anchor", "end").text("°C");
+  }
+  const span = +x.domain()[1] - +x.domain()[0];
+  const fX = span <= 1.1 * 86400e3 ? d3.timeFormat("%H:%M") : span <= 4 * 86400e3 ? d3.timeFormat("%a %H:%M") : span <= 120 * 86400e3 ? d3.timeFormat("%b %-d") : d3.timeFormat("%b %Y");
+  svg.append("g").selectAll("text").data(x.ticks(W < 500 ? 3 : 6)).join("text").attr("class", "tick").attr("x", d => x(d)).attr("y", H - 6).attr("text-anchor", "middle").text(fX);
+  if (bands.length > 1) {
+    svg.append("path").datum(bands).attr("fill", "var(--water)").attr("fill-opacity", 0.08).attr("d", d3.area().x(b => x(b.t)).y0(b => y(b.p10)).y1(b => y(b.p90)).curve(d3.curveMonotoneX));
+    svg.append("path").datum(bands.filter(b => b.p25 != null && b.p75 != null)).attr("fill", "var(--water)").attr("fill-opacity", 0.14).attr("d", d3.area().x(b => x(b.t)).y0(b => y(b.p25)).y1(b => y(b.p75)).curve(d3.curveMonotoneX));
+    svg.append("path").datum(bands.filter(b => b.p50 != null)).attr("fill", "none").attr("stroke", "var(--muted)").attr("stroke-dasharray", "4 4").attr("stroke-width", 1.2).attr("d", d3.line().x(b => x(b.t)).y(b => y(b.p50)).curve(d3.curveMonotoneX));
+  }
+  // Break the line where readings stop for more than 3 hours (or 2 days for daily values)
+  const gap = detail.daily ? 2.5 * 86400e3 : 3 * 3600e3;
+  const withGaps = [];
+  series.forEach((p, i) => { if (i && +p.t - +series[i - 1].t > gap) withGaps.push({ t: new Date((+p.t + +series[i - 1].t) / 2), v: null }); withGaps.push(p); });
+  const color = key === "discharge" || key === "gage" ? "var(--water)" : "var(--iron)";
+  svg.append("path").datum(withGaps).attr("fill", "none").attr("stroke", color).attr("stroke-width", 2).attr("stroke-linejoin", "round")
+    .attr("d", d3.line().defined(p => p.v != null).x(p => x(p.t)).y(p => y(p.v)));
+  // Shade the stretch after the last reading, if the gauge stopped reporting
+  const lastT = +series[series.length - 1].t, endT = +x.domain()[1];
+  if (endT - lastT > gap) {
+    svg.append("rect").attr("x", x(lastT)).attr("y", m.t).attr("width", x(endT) - x(lastT)).attr("height", H - m.t - m.b).attr("fill", "var(--line)").attr("opacity", 0.5);
+    svg.append("text").attr("class", "tick").attr("x", (x(lastT) + x(endT)) / 2).attr("y", m.t + 14).attr("text-anchor", "middle").text("No data");
+  }
+  const unit = paramDef(key).unit;
+  const fV = paramDef(key).f;
+  const dot = svg.append("circle").attr("r", 4).attr("fill", color).attr("stroke", "var(--panel)").attr("stroke-width", 2).style("display", "none");
+  const tip = el("div", "tip"); tip.hidden = true; box.append(tip);
+  const bis = d3.bisector(p => p.t).center;
+  svg.append("rect").attr("x", m.l).attr("y", m.t).attr("width", W - m.l - m.r).attr("height", H - m.t - m.b).attr("fill", "transparent")
+    .on("pointermove", ev => {
+      const [px] = d3.pointer(ev);
+      const p = series[bis(series, x.invert(px))]; if (!p) return;
+      dot.attr("cx", x(p.t)).attr("cy", y(p.v)).style("display", null);
+      tip.replaceChildren(el("div", "t", detail.daily ? d3.timeFormat("%b %-d, %Y")(p.t) : fFull(p.t)), el("div", null, fmtWithUnit(key, p.v)));
+      const s = key === "discharge" && statFor(detail.stats, p.t);
+      if (s && s.p50 != null) tip.append(el("div", "t", "Median for this date " + fCfs(s.p50) + " cfs"));
+      tip.hidden = false;
+      const [bx, by] = d3.pointer(ev, box);
+      tip.style.left = Math.max(0, Math.min(box.clientWidth - tip.offsetWidth, bx + 12)) + "px";
+      tip.style.top = Math.max(-8, by - tip.offsetHeight - 10) + "px";
+    })
+    .on("pointerleave", () => { dot.style("display", "none"); tip.hidden = true; });
+}
+
+function renderWaterYearCard(g, host) {
+  const card = el("section", "d-card");
+  host.append(card); // on the page before drawing, so the chart can measure its width
+  card.append(el("h3", "d-h3", "Water year comparison"));
+  card.append(el("p", "note", "Daily mean discharge through the water year (October 1 to September 30). The current water year is always shown; add past years to compare."));
+  const controls = el("div", "controls");
+  const toggle = (label, prop) => {
+    const b = el("button", null, label); b.type = "button"; b.setAttribute("aria-pressed", String(detail[prop]));
+    b.addEventListener("click", () => { detail[prop] = !detail[prop]; renderDetail(); });
+    return b;
+  };
+  const tg = el("div", "seg"); tg.setAttribute("role", "group"); tg.setAttribute("aria-label", "Reference lines");
+  tg.append(toggle("Record daily high", "wyMax"), toggle("Record daily low", "wyMin"), toggle("Median", "wyMedian"));
+  const sc = el("div", "seg"); sc.append(toggle("Log scale", "wyLog"));
+  controls.append(tg, sc);
+  // Year entry
+  const add = el("div", "d-custom");
+  const inp = el("input"); inp.type = "number"; inp.placeholder = "e.g. 2018"; inp.min = (detail.stats && detail.stats.begin) || 1900; inp.max = curWY() - 1;
+  inp.setAttribute("aria-label", "Water year to add"); inp.style.width = "7em";
+  const btn = el("button", null, "Add water year"); btn.type = "button";
+  const msg = el("span", "d-tile-sub");
+  const doAdd = () => {
+    const y = Math.round(Number(inp.value));
+    if (!y || y >= curWY() || y < 1850) { msg.textContent = "Enter a past water year, like 2018."; return; }
+    if (detail.wyYears.includes(y)) { msg.textContent = "That year is already shown."; return; }
+    if (detail.wyYears.length >= WY_COLORS.length) { msg.textContent = "Up to " + WY_COLORS.length + " past years at a time."; return; }
+    detail.wyYears.push(y); renderDetail(); loadWaterYears();
+  };
+  btn.addEventListener("click", doAdd);
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") doAdd(); });
+  const lab = el("label", null, "Water year "); lab.append(inp);
+  add.append(lab, btn, msg);
+  card.append(controls, add);
+  // Chips for the years shown
+  const chips = el("div", "wy-chips");
+  const chip = (y, color, removable) => {
+    const c = el("span", "wy-chip");
+    const sw = el("span", "wy-sw"); sw.style.background = color;
+    c.append(sw, document.createTextNode("WY " + y + (y === curWY() ? " (current)" : "")));
+    const entry = cache.get("wy|" + g.site + "|" + y);
+    if (entry && entry.err) c.append(document.createTextNode(", couldn’t load"));
+    else if (entry && entry.data && !entry.data.length) c.append(document.createTextNode(", no data"));
+    if (removable) {
+      const x = el("button", "wy-x", "×"); x.type = "button"; x.setAttribute("aria-label", "Remove water year " + y);
+      x.addEventListener("click", () => { detail.wyYears = detail.wyYears.filter(v => v !== y); renderDetail(); });
+      c.append(x);
+    }
+    chips.append(c);
+  };
+  chip(curWY(), "var(--iron)", false);
+  detail.wyYears.forEach((y, i) => chip(y, WY_COLORS[i], true));
+  card.append(chips);
+  const box = el("div", "d-chart");
+  card.append(box);
+  const cur = cache.get("wy|" + g.site + "|" + curWY());
+  if (!cur || cur.data === null) box.classList.add("skeleton");
+  else drawWaterYears(box, g);
+  card.append(el("p", "note", "Record highs and lows are the highest and lowest daily mean for each calendar date"
+    + (detail.stats && detail.stats.begin ? ", " + detail.stats.begin + "–" + detail.stats.end : "")
+    + (detail.stats && detail.stats.computed ? ", calculated from this gauge’s daily values." : ", from USGS daily statistics.")));
+}
+
+function drawWaterYears(box, g) {
+  const W = Math.max(300, box.clientWidth), H = 320, m = { l: 56, r: 12, t: 12, b: 26 };
+  const lines = [];
+  const yrs = [curWY(), ...detail.wyYears];
+  yrs.forEach((y, k) => {
+    const entry = cache.get("wy|" + g.site + "|" + y);
+    const pts = (entry && entry.data) || [];
+    lines.push({ label: "WY " + y, color: k === 0 ? "var(--iron)" : WY_COLORS[k - 1], width: k === 0 ? 2.6 : 1.6,
+      pts: pts.map(p => ({ i: wyIndex(p.t, y), v: p.v })).filter(p => p.i >= 0 && p.i <= 365) });
+  });
+  const stats = detail.stats;
+  if (!stats && (detail.wyMax || detail.wyMin || detail.wyMedian)) {
+    box.append(el("p", "note", "Record and median lines aren’t available right now: daily statistics for this gauge couldn’t be loaded. Try again in a few minutes."));
+  }
+  const ref = (prop, label, color, dash) => {
+    if (!stats) return;
+    const pts = WY_REF.map((d, i) => { const s = statFor(stats, d); return s && s[prop] != null ? { i, v: s[prop], yr: s[prop === "max" ? "maxYr" : prop === "min" ? "minYr" : null] } : null; }).filter(Boolean);
+    lines.push({ label, color, width: 1.3, dash, pts, ref: true });
+  };
+  if (detail.wyMax) ref("max", "Record daily high", "var(--bad)", "5 4");
+  if (detail.wyMin) ref("min", "Record daily low", "var(--muted)", "5 4");
+  if (detail.wyMedian) ref("p50", "Median", "var(--muted)", "2 3");
+  const all = lines.flatMap(l => l.pts.map(p => p.v)).filter(v => v > 0);
+  if (!all.length) { box.append(el("p", "gauge-empty", "No daily values for the selected water years.")); return; }
+  const x = d3.scaleLinear([0, 365], [m.l, W - m.r]);
+  const y = detail.wyLog
+    ? d3.scaleLog([Math.max(1, d3.min(all) * 0.8), d3.max(all) * 1.1], [H - m.b, m.t]).nice()
+    : d3.scaleLinear([0, d3.max(all) * 1.05], [H - m.b, m.t]).nice();
+  const svg = d3.select(box).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%").attr("height", H).style("display", "block");
+  const yt = detail.wyLog ? y.ticks(5).filter(v => [1, 2, 5].includes(+String(v)[0])) : y.ticks(5);
+  svg.append("g").selectAll("line").data(yt).join("line").attr("class", "gridline").attr("x1", m.l).attr("x2", W - m.r).attr("y1", v => y(v)).attr("y2", v => y(v));
+  svg.append("g").selectAll("text").data(yt).join("text").attr("class", "tick").attr("x", m.l - 6).attr("y", v => y(v)).attr("dy", "0.32em").attr("text-anchor", "end").text(fCfs);
+  const months = WY_REF.map((d, i) => ({ d, i })).filter(o => o.d.getDate() === 1);
+  svg.append("g").selectAll("text").data(months).join("text").attr("class", "tick").attr("x", o => x(o.i)).attr("y", H - 6).attr("text-anchor", "start")
+    .text(o => W < 520 && o.d.getMonth() % 2 ? "" : d3.timeFormat("%b")(o.d));
+  const line = d3.line().defined(p => p.v > 0).x(p => x(p.i)).y(p => y(p.v));
+  // Draw reference lines first, then past years, then the current year on top.
+  [...lines.filter(l => l.ref), ...lines.filter(l => !l.ref).reverse()].forEach(l => {
+    // break the line across missing days
+    const pts = []; l.pts.forEach((p, k) => { if (k && p.i - l.pts[k - 1].i > 2) pts.push({ i: p.i - 1, v: 0 }); pts.push(p); });
+    svg.append("path").datum(pts).attr("fill", "none").attr("stroke", l.color).attr("stroke-width", l.width)
+      .attr("stroke-dasharray", l.dash || null).attr("stroke-linejoin", "round").attr("d", line);
+  });
+  // Hover
+  const rule = svg.append("line").attr("y1", m.t).attr("y2", H - m.b).attr("stroke", "var(--muted)").attr("stroke-width", 1).style("display", "none");
+  const tip = el("div", "tip"); tip.hidden = true; box.append(tip);
+  const index = lines.map(l => new Map(l.pts.map(p => [p.i, p])));
+  svg.append("rect").attr("x", m.l).attr("y", m.t).attr("width", W - m.l - m.r).attr("height", H - m.t - m.b).attr("fill", "transparent")
+    .on("pointermove", ev => {
+      const [px] = d3.pointer(ev);
+      const i = Math.max(0, Math.min(365, Math.round(x.invert(px))));
+      rule.attr("x1", x(i)).attr("x2", x(i)).style("display", null);
+      tip.replaceChildren(el("div", "t", d3.timeFormat("%b %-d")(WY_REF[i])));
+      lines.forEach((l, k) => {
+        const p = index[k].get(i);
+        if (!p) return;
+        const row = el("div");
+        const sw = el("span", "wy-sw"); sw.style.background = l.color;
+        row.append(sw, document.createTextNode(" " + l.label + ": " + fCfs(p.v) + " cfs" + (p.yr ? " (" + p.yr + ")" : "")));
+        tip.append(row);
+      });
+      tip.hidden = false;
+      const [bx, by] = d3.pointer(ev, box);
+      tip.style.left = Math.max(0, Math.min(box.clientWidth - tip.offsetWidth, bx + 12)) + "px";
+      tip.style.top = Math.max(-8, by - tip.offsetHeight - 10) + "px";
+    })
+    .on("pointerleave", () => { rule.style("display", "none"); tip.hidden = true; });
+}
+
+function drawAnnualPeaks(box, annual, peak) {
+  const W = Math.max(300, box.clientWidth), H = 220, m = { l: 56, r: 12, t: 12, b: 26 };
+  const data = annual.map(p => ({ year: p.year, v: p.discharge, p }));
+  if (peak) data.push({ year: 2026, v: peak.v, flood: true });
+  const years = d3.range(d3.min(data, d => d.year), d3.max(data, d => d.year) + 1);
+  const x = d3.scaleBand(years, [m.l, W - m.r]).padding(0.15);
+  const y = d3.scaleLinear([0, d3.max(data, d => d.v)], [H - m.b, m.t]).nice();
+  const rec = d3.max(annual, p => p.discharge);
+  const svg = d3.select(box).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%").attr("height", H).style("display", "block");
+  svg.append("g").selectAll("line").data(y.ticks(4)).join("line").attr("class", "gridline").attr("x1", m.l).attr("x2", W - m.r).attr("y1", v => y(v)).attr("y2", v => y(v));
+  svg.append("g").selectAll("text").data(y.ticks(4)).join("text").attr("class", "tick").attr("x", m.l - 6).attr("y", v => y(v)).attr("dy", "0.32em").attr("text-anchor", "end").text(fCfs);
+  const step = Math.ceil(years.length / (W < 500 ? 4 : 8) / 10) * 10 || 10;
+  svg.append("g").selectAll("text").data(years.filter(yr => yr % step === 0)).join("text").attr("class", "tick").attr("x", yr => x(yr) + x.bandwidth() / 2).attr("y", H - 6).attr("text-anchor", "middle").text(yr => yr);
+  const tip = el("div", "tip"); tip.hidden = true; box.append(tip);
+  const fRec = p => p && p.month && p.day ? d3.timeFormat("%b %-d, %Y")(new Date(p.year, p.month - 1, p.day)) : null;
+  svg.append("g").selectAll("rect").data(data).join("rect")
+    .attr("x", d => x(d.year)).attr("width", Math.max(1, x.bandwidth())).attr("y", d => y(d.v)).attr("height", d => y(0) - y(d.v))
+    .attr("fill", d => d.flood ? "var(--iron)" : "var(--water)").attr("fill-opacity", d => d.flood || d.v === rec ? 0.95 : 0.45)
+    .on("pointerenter pointermove", (ev, d) => {
+      tip.replaceChildren(el("div", "t", d.flood ? FLOOD.label + " (provisional)" : (fRec(d.p) || String(d.year))), el("div", null, fCfs(d.v) + " cfs" + (d.v === rec && !d.flood ? ", record" : "")));
+      tip.hidden = false;
+      const [bx, by] = d3.pointer(ev, box);
+      tip.style.left = Math.max(0, Math.min(box.clientWidth - tip.offsetWidth, bx + 12)) + "px";
+      tip.style.top = Math.max(-8, by - tip.offsetHeight - 10) + "px";
+    })
+    .on("pointerleave", () => { tip.hidden = true; });
+}
+
+function downloadCsv(g, pts, key) {
+  const unit = paramDef(key).csv;
+  const rows = ["datetime," + unit + (key === "temp" ? ",water_temp_f" : "")]
+    .concat(pts.map(p => (detail.daily ? isoDateLocal(p.t) : p.t.toISOString()) + "," + p.v + (key === "temp" ? "," + d3.format(".2f")(cToF(p.v)) : "")));
+  const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${g.site}_${unit}_${isoDateLocal(detail.start)}_${isoDateLocal(detail.end)}.csv`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
 /* =========================================================
    WATERSHED SELECTION + WEB ADDRESSES (#animas, #dolores, ...)
    ========================================================= */
@@ -1622,11 +2641,22 @@ function selectWatershed(id, { push = false } = {}) {
   if (changed) Object.assign(state, { iv: null, ivHours: 0, dv: null, res: null, flood: null });
   refresh();
 }
-window.addEventListener("hashchange", () => selectWatershed(location.hash.slice(1)));
+window.addEventListener("hashchange", () => {
+  const h = location.hash.slice(1);
+  if (h.startsWith("gauge-")) { openDetail(h.slice(6)); return; }
+  if (detail.site) closeDetail();
+  selectWatershed(h);
+});
 
 /* =========================================================
    CONTROLS + REFRESH
    ========================================================= */
+document.querySelectorAll("[data-spine]").forEach(b => b.addEventListener("click", () => {
+  state.spineMeasure = b.dataset.spine;
+  document.querySelectorAll("[data-spine]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.spine === state.spineMeasure)));
+  drawSpine();
+}));
+
 function syncButtons() {
   document.querySelectorAll("[data-measure]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.measure === state.measure)));
   document.querySelectorAll("[data-range]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.range === state.range)));
@@ -1645,15 +2675,22 @@ document.getElementById("refresh").addEventListener("click", () => refresh({ for
 document.getElementById("retry").addEventListener("click", () => refresh({ force: true }));
 document.getElementById("refresh-mins").textContent = CONFIG.refreshMinutes;
 
-setInterval(() => { if (!document.hidden) refresh({ force: true }); }, CONFIG.refreshMinutes * 60e3);
+setInterval(() => {
+  if (document.hidden) return;
+  if (detail.site) { detail.nowSite = null; loadDetail(); }
+  else refresh({ force: true });
+}, CONFIG.refreshMinutes * 60e3);
 let resizeTimer;
-window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { render(); if (detail.site) renderDetail(); }, 150); });
 
 syncButtons();
 const startId = location.hash.slice(1);
-state.ws = WATERSHEDS.some(w => w.id === startId) ? startId : DEFAULT_WS;
+const startGauge = startId.startsWith("gauge-") ? gaugeBySite(startId.slice(6)) : null;
+state.ws = WATERSHEDS.some(w => w.id === startId) ? startId : (startGauge && startGauge.w ? startGauge.w.id : DEFAULT_WS);
 render();
-refresh(); // a week of recent readings covers the 24h, 72h and week views in one request
+// Opening straight to a gauge page skips loading the dashboard until you go back to it.
+if (startGauge) openDetail(startId.slice(6));
+else refresh(); // a week of recent readings covers the 24h, 72h and week views in one request
 </script>
 </body>
 </html>
