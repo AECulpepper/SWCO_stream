@@ -52,6 +52,8 @@
   }
 }
 * { box-sizing: border-box; }
+/* Anything marked hidden stays hidden, even if another rule gives it a display style. */
+[hidden] { display: none !important; }
 html, body { margin: 0; }
 body {
   background: var(--bg);
@@ -233,7 +235,7 @@ footer p { margin: 0 0 6px; }
 .flood-label.muted { fill: var(--muted); font-weight: 400; }
 
 /* ---------- Gauge detail page (beta) ---------- */
-.detail { display: flex; flex-direction: column; gap: 22px; }
+.detail:not([hidden]) { display: flex; flex-direction: column; gap: 22px; }
 .d-back { font-weight: 500; text-decoration: none; }
 .d-back:hover { text-decoration: underline; }
 .d-title { font-size: 1.9rem; margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
@@ -2244,8 +2246,13 @@ function openDetail(site) {
 }
 function closeDetail() {
   document.getElementById("main-view").hidden = false;
-  document.getElementById("detail").hidden = true;
+  const d = document.getElementById("detail");
+  d.hidden = true;
+  d.replaceChildren(); // clear the gauge page so nothing lingers
   detail.site = null;
+  detailToken++;       // ignore any gauge-page loads still finishing
+  document.title = "SW Colorado Stream Gauges";
+  window.scrollTo(0, 0);
 }
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
